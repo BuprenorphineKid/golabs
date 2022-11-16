@@ -44,7 +44,7 @@ func NewLab() *Lab {
     }
   }()
 
-  l.MainLine = <- mch
+  l.MainLine = <- mch     
   l.ImportLine = <- ich
 
   return &l
