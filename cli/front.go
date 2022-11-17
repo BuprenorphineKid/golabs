@@ -1,16 +1,37 @@
 package cli 
 
 import (
-  "fmt"
   "os"
   "bufio"
   "strings"
 )
-/*
+
 type User struct {
-  
+  CmdCount int
+  Name string
+  CmdHist []string
 }
-*/
+
+func NewUser() *User {
+  h := make([]string, 1, 150)
+  
+  var u User
+  u.CmdCount = 1
+  u.CmdHist = h
+  u.CmdHist[0] = "begin"
+
+  return &u
+}
+
+func (u *User) setName(name string) {
+  u.Name = name
+}
+
+func (u *User) addCmd(cmd string) {
+  u.CmdHist = append(u.CmdHist, cmd)
+  u.CmdCount++
+}
+
 func getInput(r *bufio.Reader) string {
   in, err := r.ReadString('\n')
 
@@ -20,33 +41,25 @@ func getInput(r *bufio.Reader) string {
 
   in = strings.TrimSpace(in)
 
-  return in + "\n"
+  return in
 }
 
-func logo() {
-  fmt.Print("(G-o-[-L-@-ß-$-]) # ")
-}
-
-func repl(r *bufio.Reader, lab *Lab, count *int) {
-  l := *lab
-  c := *count
-  
-  logo()
+func repl(r *bufio.Reader, lab *Lab, usr *User) {
+  printLineLogo()
   input := getInput(r)
-  InsertString(l.Main, input, l.MainLine + c)
 
-  c++
-  
-  repl(r, lab, &c)
+  DetermineCmd(lab, input, usr)
+
+  repl(r, lab, usr)
 }
 
 func Run() {
+  welcome()
+
   reader := bufio.NewReader(os.Stdin)
-
   lab := NewLab()
-
-  var count int = 1
+  usr := NewUser()
   
-  repl(reader, lab, &count)
-  
+  repl(reader, lab, usr)
 }
+
