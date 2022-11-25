@@ -1,9 +1,9 @@
 package main
 
 import(
-  "labs/cli"
+  "labs/repl"
 )
 
 func main() {
-  cli.Run()
+  repl.Run()
 }

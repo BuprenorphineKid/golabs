@@ -1,5 +1,4 @@
-//package main
-package cli
+package repl
 
 import (
   //"fmt"
