@@ -1,39 +1,31 @@
-package cli (
+package cli5
+
+import (
+  "flag"
   "os"
+  "labs/repl"
 )
 
-type Args struct {
-  help Help
-  load Load
-  last Last
+type flag interface {}
+
+var (
+  last bool
+  load string
+)
+
+func init() {
+  flag.BoolVar(&last, "l", false, "start labs from previous session")
+  flag.BoolVar(&last, "last", false, "start labs from previous session")
+  flag.StringVar(&load, "L", "", "start labs with your own script")
+  flag.StringVar(&load, "load", "", "start labs with your own script")
 }
 
-func Args(a ...string) Args {
-  f := args{}
-  for i, arg := range a {
-    switch {
-    case arg == "help" || arg == "-h" || arg == "--help":
-      f.help = Help{true}
-    case args == "load" || args == "-l" || args == "--load":
-      f.load == Load{a[i + 1]}
-    case args == "last" || args == "-L" || args == "--last":
-      f.last == Last{true}
-    }
+func Args() {
+  flag.Parse
+  
+  if last == true {
+
+  } else if load != "" {
+    
   }
 }
-
-type flag interface{
-  parse() 
-}
-
-type Help bool{}
-
-func (h Help) parse() {
-  if h == true {
-    println("
-  }
-}
-
-type Last bool{}
-
-type Load string{}

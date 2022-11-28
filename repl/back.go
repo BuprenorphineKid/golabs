@@ -10,6 +10,21 @@ import (
 )
 
 
+//
+// Start the session with this one
+//
+
+func SetupSession(l *Lab) {
+  temp := writeTemplate()
+
+  writeSessionFile(l.LoadSessionContent(l.LoadContent))
+}
+
+
+//
+// Main "Session" struct to hold state  
+//
+
 type Lab struct {
   Main string
   Lines []string
@@ -17,9 +32,18 @@ type Lab struct {
   ImportLine int
 }
 
+type Contents struct {
+  loaded []byte
+  current []byte
+}
+
+//
+// Lab Constructor
+//
+
 func NewLab() *Lab {
   l := Lab{}
-  l.Main = project()
+  l.Main = l.p()
   l.Lines, _ =  file2lines(".labs/session/lab.go")
 
   var(
@@ -43,33 +67,58 @@ func NewLab() *Lab {
     }
   }()
 
-  l.MainLine = <- mch     
+  l.MainLine = <- mch
   l.ImportLine = <- ich
 
   return &l
 }
 
-func project() string {
-  content, _ := ioutil.ReadFile(template())
-  os.Mkdir(".labs/session", 0777)
-  proj, _ := os.Create(".labs/session/lab.go")
-  defer proj.Close()
-  proj.Write(content)
 
-  return ".labs/session/lab.go"
+//
+// Load it up
+//
+
+func (l *Lab) LoadSessioFile(file string) []byte {
+  l.loadContent = ioutil.ReadFile(file)
+  
+  return l.loadContent
 }
 
-func template() string {
-  os.Mkdir(".labs", 0777)
 
-  data := "\npackage main\n\nimport(\n\n)\n\nfunc main() {\n\n}\n"
+//
+// Write session file, duh
+//
+
+func (l *Lab) writeSessionFile(content []byte) {
+  os.Mkdir(".labs/session", 0777)
   
-  data = strings.TrimSpace(string(data))
+  proj, _ := os.Create(".labs/session/lab.go")
+  defer proj.Close()
+  
+  proj.Write(content)
+}
+
+
+//
+// Write the Template for session
+// it may or may not be used dependin on cli flags
+//
+
+func writeTemplate() string {
+  os.Mkdir(".labs", 0777)
+ 
+  data := "\npackage main\n\nimport(\n\n)\n\nfunc main() {\n\n}\n"
 
   os.WriteFile(".labs/template", []byte(data), 0777)
 
   return ".labs/template"
 }
+
+
+//
+// Helper functions for inserting string/
+// into a file
+//
 
 func file2lines(filePath string) ([]string, error) {
   f, err := os.Open(filePath)
@@ -100,10 +149,11 @@ func linesFromReader(r io.Reader) ([]string, error) {
 }
 
 
-///**
-//* Insert string to n-th line of file.
-//* If you want to insert a line, append newline '\n' to the end of the string.
-//**/
+//
+// Insert string to n-th line of file.
+// If you want to insert a line, append newline '\n' to the end of the string.
+//
+
 func InsertString(path, str string, index int) error {
   lines, err := file2lines(path)
 
