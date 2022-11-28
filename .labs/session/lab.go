@@ -1,20 +1,9 @@
 package main
 
-import(
-"flag"
-"fmt"
-"strings"
-
+import (
+  "fmt"
 )
-var test string
 
 func main() {
-flag.Parse()
-fmt.Println(strings.Split(test, " "))
-
-}
-
-func init() {
-flag.StringVar(&test, "g", "", "")
-flag.StringVar(&test, "golang", "", "")
+  fmt.Println("Working")
 }

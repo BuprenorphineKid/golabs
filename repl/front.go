@@ -55,7 +55,7 @@ func repl(r *bufio.Reader, lab *Lab, usr *User) {
 
 func Run() {
   welcome()
-
+  
   reader := bufio.NewReader(os.Stdin)
   lab := NewLab()
   usr := NewUser()

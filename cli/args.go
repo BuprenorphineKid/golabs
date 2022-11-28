@@ -1,12 +1,9 @@
-package cli5
+package cli
 
 import (
   "flag"
-  "os"
   "labs/repl"
 )
-
-type flag interface {}
 
 var (
   last bool
@@ -14,18 +11,18 @@ var (
 )
 
 func init() {
-  flag.BoolVar(&last, "l", false, "start labs from previous session")
-  flag.BoolVar(&last, "last", false, "start labs from previous session")
-  flag.StringVar(&load, "L", "", "start labs with your own script")
-  flag.StringVar(&load, "load", "", "start labs with your own script")
+  flag.BoolVar(&last, "l", false, "[last] start labs from previous session")
+  flag.StringVar(&load, "L", "", "[Load] start labs with your own script")
 }
 
-func Args() {
-  flag.Parse
-  
-  if last == true {
+func Args(c *repl.Content) {  
+  flag.Parse()
 
+  if last == true {
+    c.Load(".labs/session/lab.go")
   } else if load != "" {
-    
+    c.Load(load)
+  } else if load != "" && last == true {
+    panic("Contradicting flag options both on")
   }
 }

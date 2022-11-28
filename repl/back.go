@@ -11,19 +11,62 @@ import (
 
 
 //
-// Start the session with this one
+// content struct
 //
 
-func SetupSession(l *Lab) {
-  temp := writeTemplate()
+type Content struct {
+  Loaded []byte
+}
 
-  writeSessionFile(l.LoadSessionContent(l.LoadContent))
+func NewContent() *Content {
+  var c Content
+  c.Loaded = writeTemplate()
+
+  return &c
 }
 
 
 //
-// Main "Session" struct to hold state  
+// Load it up
 //
+
+func (c *Content) Load(file string) {
+  l, err := ioutil.ReadFile(file)
+
+  if err != nil {
+    panic(err)
+  }
+
+  c.Loaded = l
+}
+
+
+//
+// Write session file, duh
+//
+
+func (c *Content) writeSessionFile(content []byte) {
+  os.Mkdir(".labs/session", 0777)
+  
+  proj, _ := os.Create(".labs/session/lab.go")
+  defer proj.Close()
+  
+  proj.Write(content)
+}
+
+
+//
+// Start the session with this one
+//  
+
+func (c *Content) Setup() {
+  c.writeSessionFile(c.Loaded)
+}
+
+
+//
+// Main Session struct to hold state
+//  
 
 type Lab struct {
   Main string
@@ -32,10 +75,6 @@ type Lab struct {
   ImportLine int
 }
 
-type Contents struct {
-  loaded []byte
-  current []byte
-}
 
 //
 // Lab Constructor
@@ -43,7 +82,7 @@ type Contents struct {
 
 func NewLab() *Lab {
   l := Lab{}
-  l.Main = l.p()
+  l.Main = ".labs/session/lab.go"
   l.Lines, _ =  file2lines(".labs/session/lab.go")
 
   var(
@@ -55,47 +94,36 @@ func NewLab() *Lab {
     for i, s := range l.Lines {
       if s == "func main() {" {
         mch <- i
+        return
       }
     } 
   }()
 
   go func () {
     for i, s := range l.Lines {
-      if s == "import(" {
+      if strings.HasPrefix(s, "import") {
         ich <- i
+        return
       }
     }
   }()
 
-  l.MainLine = <- mch
-  l.ImportLine = <- ich
+loop:
+  for {
+    select {
+    case l.MainLine = <- mch:
+      break
+    case l.ImportLine = <- ich:
+      break
+    default:
+      break
+    } 
+    if l.MainLine > 0 && l.ImportLine > 0 {
+      break loop
+    }
+  }
 
   return &l
-}
-
-
-//
-// Load it up
-//
-
-func (l *Lab) LoadSessioFile(file string) []byte {
-  l.loadContent = ioutil.ReadFile(file)
-  
-  return l.loadContent
-}
-
-
-//
-// Write session file, duh
-//
-
-func (l *Lab) writeSessionFile(content []byte) {
-  os.Mkdir(".labs/session", 0777)
-  
-  proj, _ := os.Create(".labs/session/lab.go")
-  defer proj.Close()
-  
-  proj.Write(content)
 }
 
 
@@ -104,14 +132,14 @@ func (l *Lab) writeSessionFile(content []byte) {
 // it may or may not be used dependin on cli flags
 //
 
-func writeTemplate() string {
+func writeTemplate() []byte {
   os.Mkdir(".labs", 0777)
  
-  data := "\npackage main\n\nimport(\n\n)\n\nfunc main() {\n\n}\n"
+  data := "package main\n\nimport(\n\n)\n\nfunc main() {\n\n}\n"
 
   os.WriteFile(".labs/template", []byte(data), 0777)
 
-  return ".labs/template"
+  return []byte(data)
 }
 
 
