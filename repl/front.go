@@ -1,65 +1,51 @@
 package repl
 
 import (
-  "os"
-  "bufio"
-  "strings"
+	"labs/cli"
 )
 
 type User struct {
-  CmdCount int
-  Name string
-  CmdHist []string
+	CmdCount int
+	Name     string
+	CmdHist  []string
 }
 
 func NewUser() *User {
-  h := make([]string, 1, 150)
-  
-  var u User
-  u.CmdCount = 1
-  u.CmdHist = h
-  u.CmdHist[0] = "begin"
+	h := make([]string, 1, 150)
 
-  return &u
+	var u User
+	u.CmdCount = 1
+	u.CmdHist = h
+	u.CmdHist[0] = "begin"
+
+	return &u
 }
 
 func (u *User) setName(name string) {
-  u.Name = name
+	u.Name = name
 }
 
 func (u *User) addCmd(cmd string) {
-  u.CmdHist = append(u.CmdHist, cmd)
-  u.CmdCount++
+	u.CmdHist = append(u.CmdHist, cmd)
+	u.CmdCount++
 }
 
-func getInput(r *bufio.Reader) string {
-  in, err := r.ReadString('\n')
+func repl(i *InOut, lab *Lab, usr *User) {
+	StartInputLoop(i)
 
-  if err != nil {
-    panic(err)
-  }
+	//DetermineCmd(lab, input, usr)
 
-  in = strings.TrimSpace(in)
-
-  return in
-}
-
-func repl(r *bufio.Reader, lab *Lab, usr *User) {
-  printLineLogo()
-  input := getInput(r)
-
-  DetermineCmd(lab, input, usr)
-
-  repl(r, lab, usr)
+	repl(i, lab, usr)
 }
 
 func Run() {
-  welcome()
-  
-  reader := bufio.NewReader(os.Stdin)
-  lab := NewLab()
-  usr := NewUser()
-  
-  repl(reader, lab, usr)
-}
+	cli.Ready()
 
+	term := cli.NewTerminal()
+	inout := newInOut(term)
+
+	lab := NewLab()
+	usr := NewUser()
+
+	repl(inout, lab, usr)
+}

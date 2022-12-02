@@ -1,15 +1,13 @@
 package main
 
-import(
-  "labs/repl"
-  "labs/cli"
+import (
+	"labs/cli"
+	"labs/repl"
 )
 
 func main() {
-  c := repl.NewContent()
-  cli.Args(c)
-  c.Setup()
+	cli.Args()
 
-  repl.Run()
+	repl.Run()
 
 }

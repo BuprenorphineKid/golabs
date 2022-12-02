@@ -1,131 +1,124 @@
 package repl
 
 import (
-  //"fmt"
-  "bufio"
-  "io"
-  "io/ioutil"
-  "os"
-  "strings"
+	//"fmt"
+	"bufio"
+	"io"
+	"io/ioutil"
+	"os"
+	"strings"
 )
-
 
 //
 // content struct
 //
 
 type Content struct {
-  Loaded []byte
+	Loaded []byte
 }
 
 func NewContent() *Content {
-  var c Content
-  c.Loaded = writeTemplate()
+	var c Content
+	c.Loaded = writeTemplate()
 
-  return &c
+	return &c
 }
-
 
 //
 // Load it up
 //
 
 func (c *Content) Load(file string) {
-  l, err := ioutil.ReadFile(file)
+	l, err := ioutil.ReadFile(file)
 
-  if err != nil {
-    panic(err)
-  }
+	if err != nil {
+		panic(err)
+	}
 
-  c.Loaded = l
+	c.Loaded = l
 }
-
 
 //
 // Write session file, duh
 //
 
 func (c *Content) writeSessionFile(content []byte) {
-  os.Mkdir(".labs/session", 0777)
-  
-  proj, _ := os.Create(".labs/session/lab.go")
-  defer proj.Close()
-  
-  proj.Write(content)
-}
+	os.Mkdir(".labs/session", 0777)
 
+	proj, _ := os.Create(".labs/session/lab.go")
+	defer proj.Close()
+
+	proj.Write(content)
+}
 
 //
 // Start the session with this one
-//  
+//
 
 func (c *Content) Setup() {
-  c.writeSessionFile(c.Loaded)
+	c.writeSessionFile(c.Loaded)
 }
-
 
 //
 // Main Session struct to hold state
-//  
+//
 
 type Lab struct {
-  Main string
-  Lines []string
-  MainLine int
-  ImportLine int
+	Main       string
+	Lines      []string
+	MainLine   int
+	ImportLine int
 }
-
 
 //
 // Lab Constructor
 //
 
 func NewLab() *Lab {
-  l := Lab{}
-  l.Main = ".labs/session/lab.go"
-  l.Lines, _ =  file2lines(".labs/session/lab.go")
+	l := Lab{}
+	l.Main = ".labs/session/lab.go"
+	l.Lines, _ = file2lines(".labs/session/lab.go")
 
-  var(
-    ich = make(chan int)
-    mch = make(chan int)
-  )
+	var (
+		ich = make(chan int)
+		mch = make(chan int)
+	)
 
-  go func () {
-    for i, s := range l.Lines {
-      if s == "func main() {" {
-        mch <- i
-        return
-      }
-    } 
-  }()
+	go func() {
+		for i, s := range l.Lines {
+			if s == "func main() {" {
+				mch <- i
+				return
+			}
+		}
+	}()
 
-  go func () {
-    for i, s := range l.Lines {
-      if strings.HasPrefix(s, "import") {
-        ich <- i
-        return
-      }
-    }
-  }()
+	go func() {
+		for i, s := range l.Lines {
+			if strings.HasPrefix(s, "import") {
+				ich <- i
+				return
+			}
+		}
+	}()
 
 loop:
-  for {
-    select {
-    case l.MainLine = <- mch:
-      break
-    case l.ImportLine = <- ich:
-      break
-    default:
-      break
-    } 
-    if l.MainLine > 0 && l.ImportLine > 0 {
-      break loop
-    }
-  }
+	for {
+		select {
+		case l.MainLine = <-mch:
+			break
+		case l.ImportLine = <-ich:
+			break
+		default:
+			break
+		}
+		if l.MainLine > 0 && l.ImportLine > 0 {
+			break loop
+		}
+	}
 
-  return &l
+	return &l
 }
-
 
 //
 // Write the Template for session
@@ -133,15 +126,14 @@ loop:
 //
 
 func writeTemplate() []byte {
-  os.Mkdir(".labs", 0777)
- 
-  data := "package main\n\nimport(\n\n)\n\nfunc main() {\n\n}\n"
+	os.Mkdir(".labs", 0777)
 
-  os.WriteFile(".labs/template", []byte(data), 0777)
+	data := "package main\n\nimport(\n\n)\n\nfunc main() {\n\n}\n"
 
-  return []byte(data)
+	os.WriteFile(".labs/template", []byte(data), 0777)
+
+	return []byte(data)
 }
-
 
 //
 // Helper functions for inserting string/
@@ -149,33 +141,32 @@ func writeTemplate() []byte {
 //
 
 func file2lines(filePath string) ([]string, error) {
-  f, err := os.Open(filePath)
+	f, err := os.Open(filePath)
 
-  if err != nil {
-    return nil, err
-  }
+	if err != nil {
+		return nil, err
+	}
 
-  defer f.Close()
+	defer f.Close()
 
-  return linesFromReader(f)
+	return linesFromReader(f)
 }
 
 func linesFromReader(r io.Reader) ([]string, error) {
-  var lines []string
+	var lines []string
 
-  scanner := bufio.NewScanner(r)
+	scanner := bufio.NewScanner(r)
 
-  for scanner.Scan() {
-     lines = append(lines, scanner.Text())
-  }
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
 
-  if err := scanner.Err(); err != nil {
-    return nil, err
-  }
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
 
-  return lines, nil
+	return lines, nil
 }
-
 
 //
 // Insert string to n-th line of file.
@@ -183,23 +174,23 @@ func linesFromReader(r io.Reader) ([]string, error) {
 //
 
 func InsertString(path, str string, index int) error {
-  lines, err := file2lines(path)
+	lines, err := file2lines(path)
 
-  if err != nil {
-    return err
-  }
+	if err != nil {
+		return err
+	}
 
-  fileContent := ""
-  
-  for i, line := range lines {
-    if i == index {
-      fileContent += str
-    }
-  
-    fileContent += line
-    fileContent += "\n"
+	fileContent := ""
 
-  }
+	for i, line := range lines {
+		if i == index {
+			fileContent += str
+		}
 
-  return ioutil.WriteFile(path, []byte(fileContent), 0644)
+		fileContent += line
+		fileContent += "\n"
+
+	}
+
+	return ioutil.WriteFile(path, []byte(fileContent), 0644)
 }
