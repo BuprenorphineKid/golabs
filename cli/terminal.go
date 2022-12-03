@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+	"strings"
 
 	"golang.org/x/term"
 )
@@ -14,14 +15,14 @@ type Terminal struct {
 	IsRaw    bool
 	Cursor   cursor
 	OldState *term.State
-	cols     int
-	lines    int
+	Cols     int
+	Lines    int
 }
 
 func NewTerminal() *Terminal {
 	t := Terminal{}
 	t.IsRaw = false
-	t.cols, t.lines = size()
+	t.Cols, t.Lines = size()
 	return &t
 }
 
@@ -63,33 +64,34 @@ func size() (int, int) {
 	var str [2]string
 
 	c := exec.Command("tput", "columns")
+	c.Stdin = os.Stdin
 
 	strC, err := c.Output()
 	if err != nil {
 		panic(err)
 	}
-	str[0] = string(strC)
+	str[0] = strings.TrimSpace(string(strC))
+	size64[0], _ = strconv.ParseInt(str[0], 0, 0)
+	size[0] = int(size64[0])
 
 	l := exec.Command("tput", "lines")
+	l.Stdin = os.Stdin
 
 	var strL []byte
 	strL, err = l.Output()
 	if err != nil {
 		panic(err)
 	}
-	str[1] = string(strL)
-
-	for i := range size {
-		size64[i], _ = strconv.ParseInt(str[i], 0, 0)
-		size[i] = int(size64[i])
-	}
+	str[1] = strings.TrimSpace(string(strL))
+	size64[1], _ = strconv.ParseInt(str[1], 0, 0)
+	size[1] = int(size64[1])
 
 	return size[0], size[1]
 }
 
 type cursor struct {
-	x int
-	y int
+	X int
+	Y int
 }
 
 func newCursor() *cursor {
@@ -107,10 +109,22 @@ func (c *cursor) RestorePos() {
 
 func (c *cursor) TrueHome() {
 	print("\033[0;0H")
-	c.x = 0
-	c.y = 0
+	c.X = 0
+	c.Y = 0
 }
 
 func (c *cursor) Home() {
-	print("\033[", c.y, ";0H")
+	print("\033[", c.Y, ";0H")
+}
+
+func (c *cursor) End(end int) {
+	print("\033[", c.Y, ";", end, "H")
+}
+
+func (c *cursor) AddX(n int) {
+	c.X = c.X + n
+}
+
+func (c *cursor) AddY(n int) {
+	c.Y = c.Y + n
 }

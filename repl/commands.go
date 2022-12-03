@@ -8,24 +8,24 @@ import (
 	// "bufio"
 )
 
-func DetermineCmd(lab *Lab, input *Input, usr *User) {
+func DetermineCmd(lab *Lab, line string, usr *User, i *InOut) {
 	switch {
-	case strings.HasPrefix(input, "import"):
-		go Import(lab, input)
-	case strings.HasPrefix(input, ";eval"):
+	case strings.HasPrefix(line, "import"):
+		go Import(lab, line)
+	case strings.HasPrefix(line, ";eval"):
 		Eval()
-	case strings.HasPrefix(input, ";save"):
-		Save()
-	case strings.HasPrefix(input, ";help"):
+	case strings.HasPrefix(line, ";save"):
+		Save(i)
+	case strings.HasPrefix(line, ";help"):
 		go Help()
-	case strings.HasPrefix(input, "type"):
-		go Type(lab, input)
-	case strings.Contains(input, "struct") ||
-		strings.HasPrefix(input, "type") &&
-			strings.Contains(input, "struct"):
-		go Struct(lab, input)
+	case strings.HasPrefix(line, "type"):
+		go Type(lab, line)
+	case strings.Contains(line, "struct") ||
+		strings.HasPrefix(line, "type") &&
+			strings.Contains(line, "struct"):
+		go Struct(lab, line)
 	default:
-		go AddToMain(lab, input, usr)
+		go AddToMain(lab, line, usr)
 	}
 }
 
@@ -110,17 +110,17 @@ func Struct(lab *Lab, s string) {
 	lab.MainLine += (3 + len(f))
 }
 
-func Save(i input) {
+func Save(i *InOut) {
 	fmt.Print("Save File?\nno/Yes :")
 
-	resp := i.get()
+	resp := StartInputLoop(i)
 
 	switch {
 	case resp == "y" || resp == "ye" || resp == "yes" || resp == "Y" || resp == "YE" || resp == "YES" || resp == "Ye" || resp == "Yes" || resp == "yES" || resp == "yeS":
 		func() {
 			fmt.Print("File Name :")
 
-			name := i.get()
+			name := StartInputLoop(i)
 
 			c, err := os.ReadFile(".labs/session/lab.go")
 			if err != nil {

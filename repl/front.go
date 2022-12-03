@@ -31,9 +31,9 @@ func (u *User) addCmd(cmd string) {
 }
 
 func repl(i *InOut, lab *Lab, usr *User) {
-	StartInputLoop(i)
+	input := StartInputLoop(i)
 
-	//DetermineCmd(lab, input, usr)
+	DetermineCmd(lab, input, usr, i)
 
 	repl(i, lab, usr)
 }
@@ -42,6 +42,10 @@ func Run() {
 	cli.Ready()
 
 	term := cli.NewTerminal()
+	term.Clear()
+
+	welcome()
+
 	inout := newInOut(term)
 
 	lab := NewLab()

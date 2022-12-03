@@ -1,9 +1,9 @@
 package main
 
-import (
-  "fmt"
-)
+import "fmt"
 
 func main() {
-  fmt.Printf("%#v %#v %#v %#v\n", "\x0a", "\x0b", "\x0c", "\x0a")
+	fmt.Printf("home: %x\n\nend: %x\n", "\033[H", "\033[F")
+	s := "jnn c c"
+	s -= "c"
 }
