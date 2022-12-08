@@ -31,9 +31,11 @@ func (u *User) addCmd(cmd string) {
 }
 
 func repl(i *InOut, lab *Lab, usr *User) {
-	input := StartInputLoop(i)
+	curLine := StartInputLoop(i)
 
-	DetermineCmd(lab, input, usr, i)
+	input := *curLine
+
+	DetermineCmd(lab, string(input), usr, i)
 
 	repl(i, lab, usr)
 }

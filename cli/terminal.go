@@ -121,6 +121,22 @@ func (c *cursor) End(end int) {
 	print("\033[", c.Y, ";", end, "H")
 }
 
+func (c *cursor) Left() {
+	print("\033[B")
+}
+
+func (c *cursor) Right() {
+	print("\033[C")
+}
+
+func (c *cursor) Up() {
+	print("\033[A")
+}
+
+func (c *cursor) Down() {
+	print("\033[D")
+}
+
 func (c *cursor) AddX(n int) {
 	c.X = c.X + n
 }

@@ -3,7 +3,7 @@ package repl
 import (
 	"io"
 	"os"
-	"strings"
+	"sync"
 
 	"labs/cli"
 )
@@ -13,11 +13,12 @@ type event struct{}
 type InOut struct {
 	reader io.Reader
 	writer io.Writer
-	rbuf   []byte
-	buf    [1]byte
-	wbuf   []byte
+	Rbuf   rbuf
+	Wbuf   wbuf
+	Spbuf  spbuf
+	Mvbuf  mvbuf
 	term   *cli.Terminal
-	lines  []string
+	lines  []line
 }
 
 func newInOut(t *cli.Terminal) *InOut {
@@ -25,57 +26,64 @@ func newInOut(t *cli.Terminal) *InOut {
 		writer: os.Stdout,
 		reader: os.Stdin,
 	}
+
 	i.term = t
-	i.rbuf = make([]byte, 0)
-	i.wbuf = make([]byte, 0)
-	i.lines = make([]string, i.term.Lines, i.term.Lines)
+	i.Rbuf = rbuf("")
+	i.Wbuf = wbuf("")
+	i.Spbuf = spbuf("")
+	i.Mvbuf = mvbuf("")
+	i.lines = make([]line, 0, i.term.Lines)
 
 	return &i
 }
 
-func (i *InOut) read() []byte {
-	i.rbuf = make([]byte, 0)
-
+func (i *InOut) read() {
 	if i.term.IsRaw != true {
-		return i.rbuf
-
+		panic("Not able to enter into raw mode :(.")
 	}
-	done := make(chan struct{}, 2)
+
+	var buf [1]byte
+	//	var holdbuf []byte
+
+	done := make(chan struct{}, 0)
 
 	for {
-		_, err := i.reader.(*os.File).Read(i.buf[:])
+		_, err := i.reader.(*os.File).Read(buf[:])
+
 		if err != nil {
 			panic(err)
 		}
 
-		i.rbuf = append(i.rbuf, i.buf[0])
+		var w sync.WaitGroup
+		wg := &w
+		wg.Add(3)
 
-		go i.killCheck(done)
-		go i.specialCheck(done)
+		go func() {
+			go i.killCheck(buf[:], wg)
+			go i.parseArrows(buf[:], wg)
+			go i.otherSpecial(buf[:], wg)
 
-		j := 2
-		for {
-			select {
-			case <-done:
-				j--
-			default:
-			}
-			if j == 0 {
-				break
-				close(done)
-			}
+			wg.Wait()
+			done <- event{}
+		}()
+
+		select {
+		case <-done:
+			close(done)
 		}
 
-		if len(i.rbuf) > 0 {
+		i.Rbuf = append(i.Rbuf, buf[:]...)
+
+		if len(i.Rbuf) > 0 {
 			break
 		}
 	}
-	return i.rbuf
+	return
 }
 
-func (i *InOut) killCheck(ch chan struct{}) {
-	if string(i.rbuf) != "\x03" {
-		ch <- event{}
+func (i *InOut) killCheck(buf []byte, wg *sync.WaitGroup) {
+	if string(buf[0]) != "\x03" {
+		wg.Done()
 		return
 	}
 
@@ -84,39 +92,50 @@ func (i *InOut) killCheck(ch chan struct{}) {
 	os.Exit(3)
 }
 
-func (i *InOut) specialCheck(ch chan struct{}) {
-	switch {
-	case string(i.rbuf) == "\x0a" || string(i.rbuf) == "\x0d": //newline/carriage-return
-		i.rbuf = []byte(strings.Replace(string(i.rbuf), string(i.rbuf), "\x0a\x0d", 1))
-		i.term.Cursor.AddY(1)
-	case string(i.rbuf) == "\x7F": //backspace
-		i.rbuf = []byte(strings.Replace(string(i.rbuf), string(i.rbuf), "\x08 \x08", 1))
-		i.term.Cursor.AddX(-1)
-	case string(i.rbuf) == "\033[H": //home
-		i.rbuf = []byte("")
-		i.term.Cursor.Home()
-		i.term.Cursor.X = 0
-	case string(i.rbuf) == "\033[F": //end
-		i.rbuf = []byte("")
-		i.term.Cursor.End(i.term.Cols)
-		i.term.Cursor.X = i.term.Cols
-	case string(i.rbuf) == "\033[A": //up
-		i.term.Cursor.AddY(-1)
-		i.rbuf = []byte("")
-	case string(i.rbuf) == "\033[B": //down
-		i.term.Cursor.AddY(1)
-		i.rbuf = []byte("")
-	case string(i.rbuf) == "\033[C": //right
-		i.term.Cursor.AddX(1)
-		i.rbuf = []byte("")
-	case string(i.rbuf) == "\x1b\x5b\x44": //left
-		i.term.Cursor.AddX(-1)
-		i.rbuf = []byte("")
-	default:
-		i.term.Cursor.X += len(i.rbuf)
+func (i *InOut) otherSpecial(buf []byte, wg *sync.WaitGroup) {
+	switch string(buf[0]) {
+	case "\x1b":
+		switch string(buf[1]) {
+		case "[":
+			switch string(buf[2]) {
+			case "3":
+				i.Spbuf = spbuf("DEL")
+			case "H":
+				i.Spbuf = spbuf("HOME")
+			case "F":
+				i.Spbuf = spbuf("END")
+			}
+		}
+	case "\x7f":
+		i.Spbuf = spbuf("BACK")
+	case "\x0a", "\x0d":
+		i.Spbuf = spbuf("NEWL")
 	}
 
-	ch <- event{}
+	wg.Done()
+}
+
+func (i *InOut) parseArrows(buf []byte, wg *sync.WaitGroup) {
+	if string(buf[0]) != "\x1b" {
+		wg.Done()
+		return
+	}
+
+	switch string(buf[1]) {
+	case "[":
+		switch string(buf[2]) {
+		case "A":
+			i.Mvbuf = mvbuf("UP")
+		case "B":
+			i.Mvbuf = mvbuf("DOWN")
+		case "C":
+			i.Mvbuf = mvbuf("RIGHT")
+		case "D":
+			i.Mvbuf = mvbuf("LEFT")
+		}
+	}
+
+	wg.Done()
 }
 
 func (i *InOut) write(buf []byte) {
@@ -127,20 +146,23 @@ func (i *InOut) write(buf []byte) {
 	}
 
 	func() {
-		i.lines[i.term.Cursor.Y] += string(buf)
+		i.lines[i.term.Cursor.Y] += line(buf)
 	}()
 }
 
-func StartInputLoop(inout *InOut) string {
+func StartInputLoop(i *InOut) *line {
 	printLineLogo()
 
-	inout.term.RawMode()
+	i.term.RawMode()
 	for {
-		inout.wbuf = inout.read()
-		go inout.write(inout.wbuf)
+		i.read()
 
-		if string(inout.wbuf) == "\x0a\x0d" {
-			return inout.lines[inout.term.Cursor.Y]
+		var bufs = []buffer{i.Rbuf, i.Spbuf, i.Mvbuf, i.Wbuf}
+
+		go ProccessBuffers(bufs, i)
+
+		if string(i.Wbuf) == "\x0a\x0d" {
+			return &i.lines[i.term.Cursor.Y]
 		}
 	}
 }

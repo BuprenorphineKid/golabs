@@ -8,15 +8,15 @@ import (
 	// "bufio"
 )
 
-func DetermineCmd(lab *Lab, line string, usr *User, i *InOut) {
+func DetermineCmd(lab *Lab, inp line, usr *User, i *InOut) {
 	switch {
-	case strings.HasPrefix(line, "import"):
+	case strings.HasPrefix(string(inp), "import"):
 		go Import(lab, line)
-	case strings.HasPrefix(line, ";eval"):
+	case strings.HasPrefix(string(inp), ";eval"):
 		Eval()
-	case strings.HasPrefix(line, ";save"):
+	case strings.HasPrefix(string(inp), ";save"):
 		Save(i)
-	case strings.HasPrefix(line, ";help"):
+	case strings.HasPrefix(string(inp), ";help"):
 		go Help()
 	case strings.HasPrefix(line, "type"):
 		go Type(lab, line)
