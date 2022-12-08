@@ -32,9 +32,15 @@ func newInOut(t *cli.Terminal) *InOut {
 	i.Wbuf = wbuf("")
 	i.Spbuf = spbuf("")
 	i.Mvbuf = mvbuf("")
-	i.lines = make([]line, 0, i.term.Lines)
+	i.lines = make([]line, 1, i.term.Lines)
 
 	return &i
+}
+
+func (i *InOut) AddLine(n int) {
+	newlines := make([]line, n, n)
+
+	i.lines = append(i.lines, newlines...)
 }
 
 func (i *InOut) read() {
@@ -43,7 +49,7 @@ func (i *InOut) read() {
 	}
 
 	var buf [1]byte
-	//	var holdbuf []byte
+	//	var checkbuf []byte
 
 	done := make(chan struct{}, 0)
 
@@ -53,6 +59,8 @@ func (i *InOut) read() {
 		if err != nil {
 			panic(err)
 		}
+
+		//		checkbuf = append(checkbuf, buf...)
 
 		var w sync.WaitGroup
 		wg := &w
@@ -94,7 +102,7 @@ func (i *InOut) killCheck(buf []byte, wg *sync.WaitGroup) {
 
 func (i *InOut) otherSpecial(buf []byte, wg *sync.WaitGroup) {
 	switch string(buf[0]) {
-	case "\x1b":
+	case "\033":
 		switch string(buf[1]) {
 		case "[":
 			switch string(buf[2]) {
@@ -157,7 +165,7 @@ func StartInputLoop(i *InOut) *line {
 	for {
 		i.read()
 
-		var bufs = []buffer{i.Rbuf, i.Spbuf, i.Mvbuf, i.Wbuf}
+		var bufs = []buffer{&i.Rbuf, &i.Spbuf, &i.Mvbuf, &i.Wbuf}
 
 		go ProccessBuffers(bufs, i)
 

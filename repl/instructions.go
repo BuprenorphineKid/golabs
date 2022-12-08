@@ -11,7 +11,7 @@ func (w wbuf) process(i *InOut) {
 type rbuf []byte
 
 func (r rbuf) process(i *InOut) {
-	i.wbuf = append(i.wbuf, i.rbuf...)
+	i.Wbuf = append(i.Wbuf, i.Rbuf...)
 
 }
 
@@ -22,13 +22,13 @@ func (sp spbuf) process(i *InOut) {
 	case "HOME":
 		i.term.Cursor.Home()
 	case "END":
-		i.term.Cursor.End()
+		i.term.Cursor.End(len(i.lines[i.term.Cursor.Y]))
 	case "BACK":
-		i.line.Backspace()
+		i.lines[i.term.Cursor.Y].Backspace()
 	case "DEL":
-		i.line.delChar()
+		i.lines[i.term.Cursor.Y].DelChar()
 	case "NEWL":
-		i.wbuf = append(i.wbuf, "\x0a\x0d")
+		i.Wbuf = append(i.Wbuf, []byte("\x0a\x0d")...)
 	}
 }
 
@@ -53,24 +53,40 @@ type buffer interface {
 
 func ProccessBuffers(bufs []buffer, in *InOut) {
 	for _, v := range bufs {
-		if v == "" {
-			return
-		}
-
 		v.process(in)
 
 		switch v.(type) {
 		case mvbuf:
-			reflect.ValueOf(v.(mvbuf)).Elem().SetBytes(
-				[]bytes(""),
+			if string(v.(mvbuf)) == "" {
+				return
+			}
+
+			reflect.ValueOf(v.(*mvbuf)).Elem().SetBytes(
+				[]byte(""),
 			)
 		case rbuf:
-			reflect.ValueOf(v.(rbuf)).Elem().SetBytes(
-				[]bytes(""),
+			if string(v.(rbuf)) == "" {
+				return
+			}
+
+			reflect.ValueOf(v.(*rbuf)).Elem().SetBytes(
+				[]byte(""),
 			)
 		case spbuf:
-			reflect.ValueOf(v.(spbuf)).Elem().SetBytes(
-				[]bytes(""),
+			if string(v.(spbuf)) == "" {
+				return
+			}
+
+			reflect.ValueOf(v.(*spbuf)).Elem().SetBytes(
+				[]byte(""),
+			)
+		case wbuf:
+			if string(v.(wbuf)) == "" {
+				return
+			}
+
+			reflect.ValueOf(v.(*wbuf)).Elem().SetBytes(
+				[]byte(""),
 			)
 		}
 	}

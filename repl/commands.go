@@ -11,21 +11,21 @@ import (
 func DetermineCmd(lab *Lab, inp line, usr *User, i *InOut) {
 	switch {
 	case strings.HasPrefix(string(inp), "import"):
-		go Import(lab, line)
+		go Import(lab, string(inp))
 	case strings.HasPrefix(string(inp), ";eval"):
 		Eval()
 	case strings.HasPrefix(string(inp), ";save"):
 		Save(i)
 	case strings.HasPrefix(string(inp), ";help"):
 		go Help()
-	case strings.HasPrefix(line, "type"):
-		go Type(lab, line)
-	case strings.Contains(line, "struct") ||
-		strings.HasPrefix(line, "type") &&
-			strings.Contains(line, "struct"):
-		go Struct(lab, line)
+	case strings.HasPrefix(string(inp), "type"):
+		go Type(lab, string(inp))
+	case strings.Contains(string(inp), "struct") ||
+		strings.HasPrefix(string(inp), "type") &&
+			strings.Contains(string(inp), "struct"):
+		go Struct(lab, string(inp))
 	default:
-		go AddToMain(lab, line, usr)
+		go AddToMain(lab, string(inp), usr)
 	}
 }
 
@@ -113,14 +113,16 @@ func Struct(lab *Lab, s string) {
 func Save(i *InOut) {
 	fmt.Print("Save File?\nno/Yes :")
 
-	resp := StartInputLoop(i)
+	input := StartInputLoop(i)
+	resp := *input
 
 	switch {
 	case resp == "y" || resp == "ye" || resp == "yes" || resp == "Y" || resp == "YE" || resp == "YES" || resp == "Ye" || resp == "Yes" || resp == "yES" || resp == "yeS":
 		func() {
 			fmt.Print("File Name :")
 
-			name := StartInputLoop(i)
+			input = StartInputLoop(i)
+			name := string(*input)
 
 			c, err := os.ReadFile(".labs/session/lab.go")
 			if err != nil {
