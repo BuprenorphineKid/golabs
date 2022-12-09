@@ -3,7 +3,7 @@ package repl
 import (
 	"io"
 	"os"
-	"sync"
+	"strings"
 
 	"labs/cli"
 )
@@ -17,6 +17,7 @@ type InOut struct {
 	Wbuf   wbuf
 	Spbuf  spbuf
 	Mvbuf  mvbuf
+	Fbuf   fbuf
 	term   *cli.Terminal
 	lines  []line
 }
@@ -32,6 +33,7 @@ func newInOut(t *cli.Terminal) *InOut {
 	i.Wbuf = wbuf("")
 	i.Spbuf = spbuf("")
 	i.Mvbuf = mvbuf("")
+	i.Fbuf = fbuf("")
 	i.lines = make([]line, 1, i.term.Lines)
 
 	return &i
@@ -49,101 +51,26 @@ func (i *InOut) read() {
 	}
 
 	var buf [1]byte
-	//	var checkbuf []byte
 
-	done := make(chan struct{}, 0)
+	_, err := i.reader.(*os.File).Read(buf[:])
 
-	for {
+	if err != nil {
+		panic(err)
+	}
+
+	i.Fbuf = append(i.Fbuf, buf[:]...)
+
+	for strings.HasPrefix(string(i.Fbuf), "\x1b") && len(i.Fbuf) < 3 {
+		var buf [1]byte
+
 		_, err := i.reader.(*os.File).Read(buf[:])
 
 		if err != nil {
 			panic(err)
 		}
 
-		//		checkbuf = append(checkbuf, buf...)
-
-		var w sync.WaitGroup
-		wg := &w
-		wg.Add(3)
-
-		go func() {
-			go i.killCheck(buf[:], wg)
-			go i.parseArrows(buf[:], wg)
-			go i.otherSpecial(buf[:], wg)
-
-			wg.Wait()
-			done <- event{}
-		}()
-
-		select {
-		case <-done:
-			close(done)
-		}
-
-		i.Rbuf = append(i.Rbuf, buf[:]...)
-
-		if len(i.Rbuf) > 0 {
-			break
-		}
+		i.Fbuf = append(i.Fbuf, buf[:]...)
 	}
-	return
-}
-
-func (i *InOut) killCheck(buf []byte, wg *sync.WaitGroup) {
-	if string(buf[0]) != "\x03" {
-		wg.Done()
-		return
-	}
-
-	i.term.Normal()
-	cli.Restore()
-	os.Exit(3)
-}
-
-func (i *InOut) otherSpecial(buf []byte, wg *sync.WaitGroup) {
-	switch string(buf[0]) {
-	case "\033":
-		switch string(buf[1]) {
-		case "[":
-			switch string(buf[2]) {
-			case "3":
-				i.Spbuf = spbuf("DEL")
-			case "H":
-				i.Spbuf = spbuf("HOME")
-			case "F":
-				i.Spbuf = spbuf("END")
-			}
-		}
-	case "\x7f":
-		i.Spbuf = spbuf("BACK")
-	case "\x0a", "\x0d":
-		i.Spbuf = spbuf("NEWL")
-	}
-
-	wg.Done()
-}
-
-func (i *InOut) parseArrows(buf []byte, wg *sync.WaitGroup) {
-	if string(buf[0]) != "\x1b" {
-		wg.Done()
-		return
-	}
-
-	switch string(buf[1]) {
-	case "[":
-		switch string(buf[2]) {
-		case "A":
-			i.Mvbuf = mvbuf("UP")
-		case "B":
-			i.Mvbuf = mvbuf("DOWN")
-		case "C":
-			i.Mvbuf = mvbuf("RIGHT")
-		case "D":
-			i.Mvbuf = mvbuf("LEFT")
-		}
-	}
-
-	wg.Done()
 }
 
 func (i *InOut) write(buf []byte) {
@@ -165,11 +92,11 @@ func StartInputLoop(i *InOut) *line {
 	for {
 		i.read()
 
-		var bufs = []buffer{&i.Rbuf, &i.Spbuf, &i.Mvbuf, &i.Wbuf}
+		var bufs = []buffer{&i.Fbuf, &i.Rbuf, &i.Spbuf, &i.Mvbuf, &i.Wbuf}
 
-		go ProccessBuffers(bufs, i)
+		ProccessBuffers(bufs, i)
 
-		if string(i.Wbuf) == "\x0a\x0d" {
+		if string(i.Wbuf) == "\x0d" {
 			return &i.lines[i.term.Cursor.Y]
 		}
 	}
