@@ -2,22 +2,33 @@ package repl
 
 import (
 	"fmt"
-	// "bufio"
-	//"os"
+	"strings"
 )
+
+// "bufio"
+//"os"
 
 const (
 	LINELOGO = "(G-o-[-L-@-ß-$-]) # "
+
+	LOGO = "  __|  _ \\ |      \\   _ )  __|\n\r (_ | (   ||     _ \\  _ \\__ \\\n\r\\___|\\___/____|_/  _\\___/____/\n\r"
 )
 
-func printLineLogo() {
+func printLineLogo(i *InOut) {
 	fmt.Print(LINELOGO)
+	i.term.Cursor.AddX(len(LINELOGO))
 }
 
-func namePrompt() {
+func namePrompt(i *InOut) {
 	fmt.Print("Enter UserName :  ")
+	i.term.Cursor.AddX(len("Enter UserName :  "))
 }
 
-func welcome() {
-	fmt.Println("Welcome to GoLabs, thank you for trying it out. This is a\nGolang based Repl so that prolly gives you a pretty good ides\n on how to use it and what not, but yeah just use it like you would any other\n Repl but with Golang code, and hopefully the rest should be self\n explanitory. type \";help\" for more info on commands and such.\nEnjoy.")
+func welcome(i *InOut) {
+	fmt.Println(LOGO)
+
+	parts := strings.Split(LOGO, "\n")
+
+	i.term.Cursor.AddY(len(parts) + 1)
+	i.AddLines(len(parts) + 1)
 }

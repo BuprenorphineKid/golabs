@@ -58,13 +58,13 @@ func Type(lab *Lab, s string) {
 	newTypes := words[1 : len(words)-1]
 	tp := words[len(words)-1]
 
-	for _, t := range newTypes {
-		go func() {
+	go func() {
+		for _, t := range newTypes {
 			dec := fmt.Sprintf("type %s %s\n", t, tp)
 			InsertString(lab.Main, dec, lab.MainLine)
 			lab.MainLine++
-		}()
-	}
+		}
+	}()
 }
 
 func Struct(lab *Lab, s string) {

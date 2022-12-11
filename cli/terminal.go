@@ -113,8 +113,8 @@ func (c *cursor) TrueHome() {
 	c.Y = 0
 }
 
-func (c *cursor) Home() {
-	print("\033[", c.Y, ";0H")
+func (c *cursor) Home(prompt int) {
+	print("\033[", c.Y, ";", prompt, "H")
 }
 
 func (c *cursor) End(end int) {
@@ -122,7 +122,7 @@ func (c *cursor) End(end int) {
 }
 
 func (c *cursor) Left() {
-	print("\033[B")
+	print("\033[D")
 }
 
 func (c *cursor) Right() {
@@ -134,7 +134,7 @@ func (c *cursor) Up() {
 }
 
 func (c *cursor) Down() {
-	print("\033[D")
+	print("\033[B")
 }
 
 func (c *cursor) AddX(n int) {
@@ -143,4 +143,8 @@ func (c *cursor) AddX(n int) {
 
 func (c *cursor) AddY(n int) {
 	c.Y = c.Y + n
+}
+
+func (c *cursor) MoveTo(x int, y int) {
+	print("\033[", y, ";", x, "H")
 }

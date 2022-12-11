@@ -1,7 +1,5 @@
 package util
 
-import ()
-
 func Unique(input []string) []string {
 	result := make([]string, 0, len(input))
 	values := make(map[string]bool)
