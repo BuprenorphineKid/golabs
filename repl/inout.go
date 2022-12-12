@@ -9,6 +9,9 @@ import (
 	"labs/cli"
 )
 
+// Application Input and Output meshed into a single construct that
+// holds all the state relevent to working with the input and
+// output.
 type InOut struct {
 	reader io.Reader
 	writer io.Writer
@@ -22,6 +25,7 @@ type InOut struct {
 	done   chan struct{}
 }
 
+// Constructor function for the Input Output struct.
 func newInOut(t *cli.Terminal) *InOut {
 	i := InOut{
 		writer: os.Stdout,
@@ -39,12 +43,18 @@ func newInOut(t *cli.Terminal) *InOut {
 	return &i
 }
 
+// InOut method for Adding n amount of lines.
 func (i *InOut) AddLines(n int) {
 	newlines := make([]line, n, n)
 
 	i.lines = append(i.lines, newlines...)
 }
 
+// the read method is used for recieving one byte of input at a
+// time and appending it to the Filter buffer(Fbuf) unless
+// it recieves an escape byte, in which case 2 more bytes
+// will be read and then its entirety will be sent to the
+// Filter buffer (Fbuf)
 func (i *InOut) read() {
 	if i.term.IsRaw != true {
 		panic("Not able to enter into raw mode :(.")
@@ -77,6 +87,8 @@ func (i *InOut) read() {
 	}
 }
 
+// the write method is used to simultaneously write to the screen
+// and to the current line.
 func (i *InOut) write(buf []byte) {
 	if string(buf) == "" {
 		return
@@ -93,6 +105,8 @@ func (i *InOut) write(buf []byte) {
 	}()
 }
 
+// Start Input Loop that after its done reading input and
+// filling buffers, concurrently processes each.
 func StartInputLoop(i *InOut) *line {
 	if i.term.Cursor.X < len(LINELOGO) {
 		printLineLogo(i)

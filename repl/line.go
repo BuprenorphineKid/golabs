@@ -1,7 +1,12 @@
 package repl
 
+// Custom string type to represent the inner line buffer that gets
+// sent around and evaluated and what not. The lines should always
+// directly mimic the lines on the screen.
 type line string
 
+// Line method for deleting a character behind the cursor when the
+// the Backspace button is preased.
 func (l *line) Backspace(xpos int) line {
 	if xpos-1 <= 0 {
 		return *l
@@ -25,6 +30,8 @@ func (l *line) Backspace(xpos int) line {
 	return <-ch
 }
 
+// Line method used to delete a character that the cursor is highliting
+// whenever the del button is pressed.
 func (l *line) DelChar(xpos int) line {
 	if xpos-1-len(LINELOGO) <= 0 || (xpos-1)-len(LINELOGO)+1 > len(*l)-1 {
 		return *l
@@ -39,16 +46,17 @@ func (l *line) DelChar(xpos int) line {
 		b := []byte(*l)
 
 		front := b[:pos+1]
-		var back = b[pos+1:]
-		mod := append([]byte(" "), back...)
+		var back = b[pos+2:]
 
-		ch <- line(append(front, mod...))
+		ch <- line(append(front, back...))
 		close(ch)
 	}()
 
 	return <-ch
 }
 
+// Line method to margin the text. done with 8 spaces rather than a
+// single tab, strictly due to convenience.
 func (l *line) Tab(xpos int) line {
 	const tab = "        "
 	var pos int

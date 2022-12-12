@@ -143,7 +143,7 @@ func (f fbuf) process(i *InOut) {
 	f.filterInput(i)
 }
 
-// actuall concurrent filtering of fbuf if necessary.
+// actual concurrent filtering of fbuf as necessary.
 func (f fbuf) filterInput(i *InOut) {
 	var w sync.WaitGroup
 	done := make(chan struct{}, 0)
@@ -153,7 +153,7 @@ func (f fbuf) filterInput(i *InOut) {
 
 	go func() {
 		go killCheck(i, wg)
-		go testCheck(i, wg)
+		go DebugCheck(i, wg)
 		go parseArrows(i, wg)
 		go otherSpecial(i, wg)
 		go regularChars(i, wg)
@@ -168,7 +168,7 @@ func (f fbuf) filterInput(i *InOut) {
 	}
 }
 
-// Filter through in!put byte for "Special" KeyStrokes: NL, CR, Home,
+// Filter through in!put bytes for "Special" KeyStrokes: NL, CR, Home,
 // End, Del, etc.
 func otherSpecial(i *InOut, wg *sync.WaitGroup) {
 	if len(i.Fbuf) == 0 {
@@ -205,7 +205,7 @@ func otherSpecial(i *InOut, wg *sync.WaitGroup) {
 	wg.Done()
 }
 
-// Filter through in!put byte for "Movement" KeyStrokes: Arrows.
+// Filter through in!put bytes for "Movement" KeyStrokes: Arrows.
 func parseArrows(i *InOut, wg *sync.WaitGroup) {
 	if len(i.Fbuf) < 3 {
 		wg.Done()
@@ -246,38 +246,47 @@ func killCheck(i *InOut, wg *sync.WaitGroup) {
 	os.Exit(3)
 }
 
-// Filter through in!put byte for "Debug" KeyStroke: Ctrl-D.
-func testCheck(i *InOut, wg *sync.WaitGroup) {
+// Filter through input byte for "Debug" KeyStroke: Ctrl-D.
+func DebugCheck(i *InOut, wg *sync.WaitGroup) {
 	if len(i.Fbuf) == 0 || string(i.Fbuf[0]) != "\x04" {
 		wg.Done()
 		return
 	}
 
-	fmt.Printf("\n\rBUFFERS -- rbuf: %s|wbuf: %s|mvbuf: %s|spbuf: %s|fbuf: %s\n\r",
-		string(i.Rbuf),
-		string(i.Wbuf),
-		string(i.Mvbuf),
-		string(i.Spbuf),
-		string(i.Fbuf),
-	)
+	i.term.Cursor.SavePos()
+	old := i.term.Cursor.Y
 
-	fmt.Printf("Cursor -- X: %d|Y: %d\n\r",
+	x := i.term.Cols / 3
+
+	i.term.Cursor.MoveTo(x+x, 1)
+
+	fmt.Printf("POS - |X: %d| |Y: %d|",
 		i.term.Cursor.X,
 		i.term.Cursor.Y,
 	)
 
-	fmt.Printf("Lines -- count: %d| contents:\n\r",
+	i.term.Cursor.MoveTo(x+x, 2)
+
+	fmt.Printf("LINES - |count: %d|",
 		len(i.lines),
 	)
 
-	for _, v := range i.lines {
-		fmt.Println(string(v))
+	i.term.Cursor.MoveTo(x+x, 3)
+	i.term.Cursor.Y = 3
+	for n, v := range i.lines[5:] {
+		fmt.Printf("%d - |%s|\n", n, string(v))
+		i.term.Cursor.AddY(1)
+
+		i.term.Cursor.MoveTo(x+x, i.term.Cursor.Y)
 	}
+
+	i.term.Cursor.RestorePos()
+	i.term.Cursor.Y = old
 
 	wg.Done()
 }
 
-// Filter through in!put byte for "Regular" KeyStrokes: Characters,
+// Filter through input byte for "Regular" KeyStrokes: Characters,
 // Spacebar.
 func regularChars(i *InOut, wg *sync.WaitGroup) {
 	if len(i.Fbuf) == 0 {

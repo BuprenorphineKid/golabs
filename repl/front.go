@@ -43,7 +43,8 @@ func repl(i *InOut, lab *Lab, usr *User) {
 	repl(i, lab, usr)
 }
 
-// Instantiate objects and Start main loop.
+// Instantiate objects and Start main loop. This is the function to
+// start the application
 func Run() {
 	cli.Ready()
 

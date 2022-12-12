@@ -1,7 +1,6 @@
 package repl
 
 import (
-	//"fmt"
 	"bufio"
 	"io"
 	"io/ioutil"
@@ -9,10 +8,7 @@ import (
 	"strings"
 )
 
-//
 // content struct
-//
-
 type Content struct {
 	Loaded []byte
 }
@@ -24,10 +20,7 @@ func NewContent() *Content {
 	return &c
 }
 
-//
 // Load it up
-//
-
 func (c *Content) Load(file string) {
 	l, err := ioutil.ReadFile(file)
 
@@ -38,10 +31,7 @@ func (c *Content) Load(file string) {
 	c.Loaded = l
 }
 
-//
 // Write session file, duh
-//
-
 func (c *Content) writeSessionFile(content []byte) {
 	os.Mkdir(".labs/session", 0777)
 
@@ -51,18 +41,12 @@ func (c *Content) writeSessionFile(content []byte) {
 	proj.Write(content)
 }
 
-//
 // Start the session with this one
-//
-
 func (c *Content) Setup() {
 	c.writeSessionFile(c.Loaded)
 }
 
-//
 // Main Session struct to hold state
-//
-
 type Lab struct {
 	Main       string
 	Lines      []string
@@ -70,10 +54,7 @@ type Lab struct {
 	ImportLine int
 }
 
-//
 // Lab Constructor
-//
-
 func NewLab() *Lab {
 	l := Lab{}
 	l.Main = ".labs/session/lab.go"
@@ -120,11 +101,8 @@ loop:
 	return &l
 }
 
-//
 // Write the Template for session
 // it may or may not be used dependin on cli flags
-//
-
 func writeTemplate() []byte {
 	os.Mkdir(".labs", 0777)
 
@@ -135,11 +113,8 @@ func writeTemplate() []byte {
 	return []byte(data)
 }
 
-//
 // Helper functions for inserting string/
 // into a file
-//
-
 func file2lines(filePath string) ([]string, error) {
 	f, err := os.Open(filePath)
 
@@ -168,11 +143,8 @@ func linesFromReader(r io.Reader) ([]string, error) {
 	return lines, nil
 }
 
-//
 // Insert string to n-th line of file.
 // If you want to insert a line, append newline '\n' to the end of the string.
-//
-
 func InsertString(path, str string, index int) error {
 	lines, err := file2lines(path)
 
