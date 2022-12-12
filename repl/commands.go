@@ -8,28 +8,27 @@ import (
 	// "bufio"
 )
 
-func DetermineCmd(lab *Lab, inp line, usr *User, i *InOut) {
+func DetermineCmd(lab *Lab, inp string, usr *User, i *InOut) {
 	switch {
-	case strings.HasPrefix(string(inp), "import"):
-		go Import(lab, string(inp))
-	case strings.HasPrefix(string(inp), ";eval"):
+	case strings.HasPrefix(inp, "import"):
+		go Import(lab, inp)
+	case strings.HasPrefix(inp, ";eval"):
 		Eval()
-	case strings.HasPrefix(string(inp), ";save"):
+	case strings.HasPrefix(inp, ";save"):
 		Save(i)
-	case strings.HasPrefix(string(inp), ";help"):
+	case strings.HasPrefix(inp, ";help"):
 		go Help()
-	case strings.HasPrefix(string(inp), "type"):
-		go Type(lab, string(inp))
-	case strings.Contains(string(inp), "struct") ||
-		strings.HasPrefix(string(inp), "type") &&
-			strings.Contains(string(inp), "struct"):
-		go Struct(lab, string(inp))
+	case strings.HasPrefix(inp, "type"):
+		go Type(lab, inp)
+	case strings.Contains(inp, "struct"):
+		go Struct(lab, inp)
 	default:
-		go AddToMain(lab, string(inp), usr)
+		go AddToMain(lab, inp, usr)
 	}
 }
 
 func Eval() {
+	println("prolly not lol")
 	proc := exec.Command("go", "run", ".labs/session/lab.go")
 	proc.Stderr = os.Stderr
 	proc.Stdin = os.Stdin
@@ -114,7 +113,7 @@ func Save(i *InOut) {
 	fmt.Print("Save File?\nno/Yes :")
 
 	input := StartInputLoop(i)
-	resp := *input
+	resp := string(input)
 
 	switch {
 	case resp == "y" || resp == "ye" || resp == "yes" || resp == "Y" || resp == "YE" || resp == "YES" || resp == "Ye" || resp == "Yes" || resp == "yES" || resp == "yeS":
@@ -122,7 +121,7 @@ func Save(i *InOut) {
 			fmt.Print("File Name :")
 
 			input = StartInputLoop(i)
-			name := string(*input)
+			name := string(input)
 
 			c, err := os.ReadFile(".labs/session/lab.go")
 			if err != nil {
@@ -138,12 +137,12 @@ func Save(i *InOut) {
 	}
 }
 func Help() {
-	fmt.Println("Commands\n________\n';eval'  -  evaluate and print output of code so far\n';save'  -  save all of which you have just written to a new or existing File\n';help'  -  print this help message")
+	fmt.Println("Commands\n\r________\n\r';eval'  -  evaluate and print output of code so far\n\r';save'  -  save all of which you have just written to a new or existing File\n\r';help'  -  print this help message\n\r")
 }
 
-func AddToMain(lab *Lab, line string, user *User) {
+func AddToMain(lab *Lab, row string, user *User) {
 	l := *lab
-	InsertString(l.Main, line+"\n", l.MainLine+user.CmdCount)
+	InsertString(l.Main, row+"\n\r", l.MainLine+user.CmdCount)
 
-	user.addCmd(line)
+	user.addCmd(row)
 }

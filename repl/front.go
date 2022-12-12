@@ -2,6 +2,7 @@ package repl
 
 import (
 	"labs/cli"
+	"strings"
 )
 
 // User Struct for keeping count of Hist CmdCount, yada yada.
@@ -38,7 +39,10 @@ func (u *User) addCmd(cmd string) {
 func repl(i *InOut, lab *Lab, usr *User) {
 	input := StartInputLoop(i)
 
-	DetermineCmd(lab, *input, usr, i)
+	cmd := strings.TrimSpace(string(input))
+	println(cmd)
+
+	DetermineCmd(lab, cmd, usr, i)
 
 	repl(i, lab, usr)
 }

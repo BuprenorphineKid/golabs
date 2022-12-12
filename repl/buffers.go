@@ -273,7 +273,7 @@ func DebugCheck(i *InOut, wg *sync.WaitGroup) {
 
 	i.term.Cursor.MoveTo(x+x, 3)
 	i.term.Cursor.Y = 3
-	for n, v := range i.lines[5:] {
+	for n, v := range i.lines[:] {
 		fmt.Printf("%d - |%s|\n", n, string(v))
 		i.term.Cursor.AddY(1)
 

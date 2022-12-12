@@ -107,7 +107,7 @@ func (i *InOut) write(buf []byte) {
 
 // Start Input Loop that after its done reading input and
 // filling buffers, concurrently processes each.
-func StartInputLoop(i *InOut) *line {
+func StartInputLoop(i *InOut) line {
 	if i.term.Cursor.X < len(LINELOGO) {
 		printLineLogo(i)
 	}
@@ -127,7 +127,7 @@ func StartInputLoop(i *InOut) *line {
 
 		select {
 		case <-i.done:
-			return &i.lines[i.term.Cursor.Y]
+			return i.lines[i.term.Cursor.Y-1]
 		default:
 			continue
 		}
