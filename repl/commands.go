@@ -1,41 +1,72 @@
 package repl
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"strings"
+	"sync"
 	// "bufio"
 )
 
-func DetermineCmd(lab *Lab, inp string, usr *User, i *InOut) {
+func DetermineCmd(inp string, usr *User) {
 	switch {
 	case strings.HasPrefix(inp, "import"):
-		go Import(lab, inp)
+		go Import(usr.Lab, inp)
 	case strings.HasPrefix(inp, ";eval"):
-		Eval()
+		var wg sync.WaitGroup
+
+		wg.Add(1)
+		usr.Eval.Evaluate(&wg)
+
+		wg.Wait()
 	case strings.HasPrefix(inp, ";save"):
-		Save(i)
+		Save()
 	case strings.HasPrefix(inp, ";help"):
 		go Help()
 	case strings.HasPrefix(inp, "type"):
-		go Type(lab, inp)
+		go Type(usr.Lab, inp)
 	case strings.Contains(inp, "struct"):
-		go Struct(lab, inp)
+		go Struct(usr.Lab, inp)
 	default:
-		go AddToMain(lab, inp, usr)
+		go AddToMain(usr, inp)
 	}
 }
 
-func Eval() {
-	println("prolly not lol")
-	proc := exec.Command("go", "run", ".labs/session/lab.go")
-	proc.Stderr = os.Stderr
-	proc.Stdin = os.Stdin
+type Eval struct {
+	stdin   io.Reader
+	stderr  io.Writer
+	Process *exec.Cmd
+	LastOut []byte
+}
 
-	output, _ := proc.Output()
+func NewEval() *Eval {
+	e := Eval{
+		stdin:   os.Stdin,
+		stderr:  os.Stderr,
+		Process: exec.Command("go", "run", ".labs/session/lab.go"),
+	}
 
-	fmt.Println(string(output))
+	e.Process.Stderr = e.stderr
+	e.Process.Stdin = e.stdin
+
+	return &e
+}
+
+func (e *Eval) Evaluate(wg *sync.WaitGroup) {
+	var err error
+
+	e.LastOut, err = e.Process.Output()
+
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("\r" + string(e.LastOut))
+
+	wg.Done()
 }
 
 func Import(lab *Lab, s string) {
@@ -109,19 +140,32 @@ func Struct(lab *Lab, s string) {
 	lab.MainLine += (3 + len(f))
 }
 
-func Save(i *InOut) {
+func Save() {
 	fmt.Print("Save File?\nno/Yes :")
 
-	input := StartInputLoop(i)
-	resp := string(input)
+	var r = bufio.NewReader(os.Stdin)
+	var buf []byte
+
+	_, err := r.Read(buf)
+	if err != nil {
+		panic(err)
+	}
+
+	resp := string(buf)
 
 	switch {
 	case resp == "y" || resp == "ye" || resp == "yes" || resp == "Y" || resp == "YE" || resp == "YES" || resp == "Ye" || resp == "Yes" || resp == "yES" || resp == "yeS":
 		func() {
 			fmt.Print("File Name :")
 
-			input = StartInputLoop(i)
-			name := string(input)
+			var buf []byte
+
+			_, err := r.Read(buf)
+			if err != nil {
+				panic(err)
+			}
+
+			name := string(buf)
 
 			c, err := os.ReadFile(".labs/session/lab.go")
 			if err != nil {
@@ -140,9 +184,8 @@ func Help() {
 	fmt.Println("Commands\n\r________\n\r';eval'  -  evaluate and print output of code so far\n\r';save'  -  save all of which you have just written to a new or existing File\n\r';help'  -  print this help message\n\r")
 }
 
-func AddToMain(lab *Lab, row string, user *User) {
-	l := *lab
-	InsertString(l.Main, row+"\n\r", l.MainLine+user.CmdCount)
+func AddToMain(usr *User, row string) {
+	InsertString(usr.Lab.Main, row+"\n\r", usr.Lab.MainLine+usr.CmdCount)
 
-	user.addCmd(row)
+	usr.addCmd(row)
 }

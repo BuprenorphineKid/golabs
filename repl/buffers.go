@@ -1,5 +1,14 @@
 package repl
 
+/* I realize alot of the implementation and logic in this file can
+be a little bit hard to follow.. Its literally all because i
+couldnt let go of this little clever bit of dynamically identifying
+the line youre on by using the i.term.Cursor's Y position as the
+array index. Like Terminal Cursor Positioning is already 1 indexed
+if you get it by means of escape sequences like i did. Might as
+well put it to a little use lol. Anyway, just keep that in mind
+and it really isnt all that bad*/
+
 import (
 	"fmt"
 	"labs/cli"
@@ -64,7 +73,8 @@ func (sp spbuf) process(i *InOut) {
 	case "END":
 		i.term.Cursor.End(len(i.lines[i.term.Cursor.Y]))
 	case "BACK":
-		if i.term.Cursor.X <= len(LINELOGO) {
+		if i.term.Cursor.X <= len(LINELOGO) ||
+			i.term.Cursor.X-len(LINELOGO) > len(i.lines[i.term.Cursor.Y]) {
 			return
 		}
 
@@ -87,7 +97,8 @@ func (sp spbuf) process(i *InOut) {
 		i.done <- event{}
 		return
 	case "TAB":
-		if i.term.Cursor.X >= i.term.Cols-8 || i.term.Cursor.X < 0 {
+		if i.term.Cursor.X >= i.term.Cols-8 ||
+			i.term.Cursor.X < 0 {
 			return
 		}
 
@@ -104,7 +115,7 @@ type mvbuf []byte
 func (mv mvbuf) process(i *InOut) {
 	switch string(mv) {
 	case "UP":
-		if i.term.Cursor.Y == 0 {
+		if i.term.Cursor.Y <= 5 {
 			return
 		}
 
@@ -118,14 +129,14 @@ func (mv mvbuf) process(i *InOut) {
 		i.term.Cursor.Down()
 		i.term.Cursor.AddY(1)
 	case "RIGHT":
-		if i.term.Cursor.X == len(i.lines[i.term.Cursor.Y]) {
+		if i.term.Cursor.X >= len(LINELOGO)+len(i.lines[i.term.Cursor.Y]) {
 			return
 		}
 
 		i.term.Cursor.Right()
 		i.term.Cursor.AddX(1)
 	case "LEFT":
-		if i.term.Cursor.X == len(LINELOGO) {
+		if i.term.Cursor.X <= len(LINELOGO) {
 			return
 		}
 

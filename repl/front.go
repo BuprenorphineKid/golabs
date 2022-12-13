@@ -6,20 +6,28 @@ import (
 )
 
 // User Struct for keeping count of Hist CmdCount, yada yada.
+// User holds all the main ingredients to run the show that
+// are exvlusive to a user. Think env, files, input/output etc.
 type User struct {
 	CmdCount int
 	Name     string
 	CmdHist  []string
+	Eval     *Eval
+	InOut    *InOut
+	Lab      *Lab
 }
 
 // Creates a new User object and returns a pointer to it.
-func NewUser() *User {
+func NewUser(t *cli.Terminal) *User {
 	h := make([]string, 1, 150)
 
 	var u User
 	u.CmdCount = 1
 	u.CmdHist = h
 	u.CmdHist[0] = "begin"
+	u.InOut = NewInOut(t)
+	u.Lab = NewLab()
+	u.Eval = NewEval()
 
 	return &u
 }
@@ -36,15 +44,15 @@ func (u *User) addCmd(cmd string) {
 }
 
 // The main recursive loop at the top level.
-func repl(i *InOut, lab *Lab, usr *User) {
-	input := StartInputLoop(i)
+func repl(usr *User) {
+	input := StartInputLoop(usr.InOut)
 
-	cmd := strings.TrimSpace(string(input))
-	println(cmd)
+	DetermineCmd(
+		strings.TrimSpace(string(input)),
+		usr,
+	)
 
-	DetermineCmd(lab, cmd, usr, i)
-
-	repl(i, lab, usr)
+	repl(usr)
 }
 
 // Instantiate objects and Start main loop. This is the function to
@@ -56,12 +64,9 @@ func Run() {
 	term.Clear()
 	term.RawMode()
 
-	inout := newInOut(term)
+	usr := NewUser(term)
 
-	welcome(inout)
+	logo(usr.InOut)
 
-	lab := NewLab()
-	usr := NewUser()
-
-	repl(inout, lab, usr)
+	repl(usr)
 }

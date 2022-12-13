@@ -5,9 +5,6 @@ import (
 	"strings"
 )
 
-// "bufio"
-//"os"
-
 const (
 	LINELOGO = "(G-o-[-L-@-ß-$-]) # "
 
@@ -24,7 +21,7 @@ func namePrompt(i *InOut) {
 	i.term.Cursor.AddX(len("Enter UserName :  "))
 }
 
-func welcome(i *InOut) {
+func logo(i *InOut) {
 	fmt.Println(LOGO)
 
 	parts := strings.Split(LOGO, "\n")

@@ -26,7 +26,7 @@ type InOut struct {
 }
 
 // Constructor function for the Input Output struct.
-func newInOut(t *cli.Terminal) *InOut {
+func NewInOut(t *cli.Terminal) *InOut {
 	i := InOut{
 		writer: os.Stdout,
 		reader: os.Stdin,

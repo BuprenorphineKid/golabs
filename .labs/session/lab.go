@@ -1,10 +1,11 @@
 package main
 
 import(
+"fmt"
 
 )
 
 func main() {
-println("making it so far?")
+fmt.Printf(""d|: ds, u: %s, ""hot, "not")
 
 }
