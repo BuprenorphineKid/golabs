@@ -6,6 +6,7 @@ import(
 )
 
 func main() {
-fmt.Printf(""d|: ds, u: %s, ""hot, "not")
+
+fmt.Println("hey fucker")
 
 }

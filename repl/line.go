@@ -84,3 +84,31 @@ func (l *line) Tab(xpos int) line {
 
 	return <-ch
 }
+
+// Use this method if you want to insert a character into the text
+// inside the line without overwriting other pre-existing
+// characters.
+func (l *line) Insert(char []byte, xpos int) line {
+	var pos int
+
+	if (xpos-1)-len(LINELOGO) <= 0 {
+		pos = 0
+	} else {
+		pos = (xpos - 1) - len(LINELOGO)
+	}
+
+	ch := make(chan line)
+
+	go func() {
+		b := []byte(*l)
+
+		front := b[:pos]
+		back := b[pos:]
+		mod := append(char, back...)
+
+		ch <- line(append(front, mod...))
+		close(ch)
+	}()
+
+	return <-ch
+}

@@ -101,7 +101,7 @@ func (i *InOut) write(buf []byte) {
 	}
 
 	go func() {
-		i.lines[i.term.Cursor.Y] += line(buf)
+		i.lines[i.term.Cursor.Y] = i.lines[i.term.Cursor.Y].Insert(buf, i.term.Cursor.X)
 	}()
 }
 
