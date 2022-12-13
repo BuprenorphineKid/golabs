@@ -148,3 +148,15 @@ func (c *cursor) AddY(n int) {
 func (c *cursor) MoveTo(x int, y int) {
 	print("\033[", y, ";", x, "H")
 }
+
+func (c *cursor) CutRest() {
+	print("\033[0K")
+}
+
+func (c *cursor) CutFirst() {
+	print("\033[1K")
+}
+
+func (c *cursor) CutLine() {
+	print("\033[2K")
+}

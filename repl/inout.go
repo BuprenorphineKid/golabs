@@ -94,15 +94,9 @@ func (i *InOut) write(buf []byte) {
 		return
 	}
 
-	_, err := i.writer.(*os.File).Write(buf)
+	i.lines[i.term.Cursor.Y] = i.lines[i.term.Cursor.Y].Insert(buf, i.term.Cursor.X)
 
-	if err != nil {
-		panic(err)
-	}
-
-	go func() {
-		i.lines[i.term.Cursor.Y] = i.lines[i.term.Cursor.Y].Insert(buf, i.term.Cursor.X)
-	}()
+	Refresh(i)
 }
 
 // Start Input Loop that after its done reading input and
