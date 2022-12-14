@@ -2,19 +2,20 @@ package repl
 
 import (
 	"labs/cli"
-	"strings"
 )
 
 // User Struct for keeping count of Hist CmdCount, yada yada.
 // User holds all the main ingredients to run the show that
 // are exvlusive to a user. Think env, files, input/output etc.
 type User struct {
-	CmdCount int
-	Name     string
-	CmdHist  []string
-	Eval     *Eval
-	InOut    *InOut
-	Lab      *Lab
+	CmdCount  int
+	Name      string
+	CmdHist   []string
+	InFunc    bool
+	NestDepth int
+	Eval      *Eval
+	InOut     *InOut
+	Lab       *Lab
 }
 
 // Creates a new User object and returns a pointer to it.
@@ -22,12 +23,17 @@ func NewUser(t *cli.Terminal) *User {
 	h := make([]string, 1, 150)
 
 	var u User
+
 	u.CmdCount = 1
 	u.CmdHist = h
 	u.CmdHist[0] = "begin"
+
 	u.InOut = NewInOut(t)
 	u.Lab = NewLab()
 	u.Eval = NewEval()
+
+	u.InFunc = false
+	u.NestDepth = 0
 
 	return &u
 }
@@ -47,10 +53,7 @@ func (u *User) addCmd(cmd string) {
 func repl(usr *User) {
 	input := StartInputLoop(usr.InOut)
 
-	DetermineCmd(
-		strings.TrimSpace(string(input)),
-		usr,
-	)
+	DetermCmd(usr, string(input))
 
 	repl(usr)
 }

@@ -102,9 +102,9 @@ func (i *InOut) write(buf []byte) {
 // Start Input Loop that after its done reading input and
 // filling buffers, concurrently processes each.
 func StartInputLoop(i *InOut) line {
-	if i.term.Cursor.X < len(LINELOGO) {
-		printLineLogo(i)
-	}
+	printLineLogo(i)
+
+	i.term.Cursor.X = len(LINELOGO)
 
 	for {
 		i.done = EventChan(1)

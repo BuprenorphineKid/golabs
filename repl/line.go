@@ -31,16 +31,29 @@ func (l *line) Backspace(xpos int) line {
 // Line method used to delete a character that the cursor is highliting
 // whenever the del button is pressed.
 func (l *line) DelChar(xpos int) line {
-	if xpos-1-len(LINELOGO) <= 0 || (xpos-1)-len(LINELOGO)+1 > len(*l)-1 {
+	if (xpos-1)-len(LINELOGO)+1 > len(*l)-1 {
 		return *l
 	}
 
-	print(" \b")
+	if (xpos-1)-len(LINELOGO)+1 == len(*l)-1 {
+		if len(*l) == 1 {
+			return line("")
+		}
+		var b = []byte(*l)
+
+		return line(b[:len(b)-2])
+	}
+	var pos int
+
+	if (xpos-1)-len(LINELOGO) < 0 {
+		pos = 0
+	} else {
+		pos = (xpos - 1) - len(LINELOGO)
+	}
 
 	ch := make(chan line)
 
 	go func() {
-		pos := (xpos - 1) - len(LINELOGO)
 		b := []byte(*l)
 
 		front := b[:pos+1]

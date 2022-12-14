@@ -70,8 +70,10 @@ func (sp spbuf) process(i *InOut) {
 	switch string(sp) {
 	case "HOME":
 		i.term.Cursor.Home(len(LINELOGO))
+		i.term.Cursor.X = len(LINELOGO)
 	case "END":
-		i.term.Cursor.End(len(i.lines[i.term.Cursor.Y]))
+		i.term.Cursor.End(len(i.lines[i.term.Cursor.Y]) + len(LINELOGO))
+		i.term.Cursor.X = len(i.lines[i.term.Cursor.Y]) + len(LINELOGO)
 	case "BACK":
 		if i.term.Cursor.X <= len(LINELOGO) ||
 			i.term.Cursor.X-len(LINELOGO) > len(i.lines[i.term.Cursor.Y]) {
@@ -87,19 +89,18 @@ func (sp spbuf) process(i *InOut) {
 
 		i.term.Cursor.Left()
 	case "DEL":
-		if i.term.Cursor.X <= len(LINELOGO) {
+		if i.term.Cursor.X < len(LINELOGO) {
 			return
 		}
+
 		i.lines[i.term.Cursor.Y] = i.lines[i.term.Cursor.Y].DelChar(i.term.Cursor.X)
 
 		Refresh(i)
+		i.term.Cursor.Left()
 	case "NEWL":
 		i.term.Cursor.MoveTo(0, len(i.lines))
 		i.term.Cursor.AddY(len(i.lines) - i.term.Cursor.Y)
-		printLineLogo(i)
 
-		i.term.Cursor.MoveTo(len(LINELOGO), len(i.lines))
-		i.term.Cursor.X = len(LINELOGO)
 		i.AddLines(1)
 
 		i.done <- event{}
