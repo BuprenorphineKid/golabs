@@ -48,6 +48,8 @@ is far from conplete. this section will be updated when the project gets
 closer to being somewhere i could call packagable.
 
 TODO:
+	ADD PLUGIN SUPPORT
+
 	syntax package *color*
 
 	more debugging options

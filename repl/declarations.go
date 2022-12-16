@@ -107,8 +107,8 @@ func Func(usr *User, s string) {
 	trimmed := strings.TrimSpace(strings.Trim(s, "{}func"))
 
 	recv := regexp.MustCompile(`^\(.+?\b.+?\)`)
-	fnName := regexp.MustCompile(`\B\s\b.+?\b|^\b.+?\b`)
-	param := regexp.MustCompile(`\b\(.+?\b.+?\)|\(\)`)
+	fnname := regexp.MustCompile(`^\b.+?\b|\B\s\b.+?\b`)
+	param := regexp.MustCompile(`\(\)|\b\(.+?\b.+?\)`)
 	retval := regexp.MustCompile(`\s\(.+?\)$|([[:alnum:]]|\*)*\b$`)
 
 	rcv := strings.TrimSpace(recv.FindString(trimmed))

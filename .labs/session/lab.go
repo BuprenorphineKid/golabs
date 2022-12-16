@@ -5,6 +5,5 @@ import(
 )
 
 func main() {
-hey there pretty mama
 
 }
