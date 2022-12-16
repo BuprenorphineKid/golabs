@@ -19,7 +19,7 @@ func DetermDecl(usr *User, inp string) {
 		go Type(usr.Lab, inp)
 	case strings.Contains(inp, "struct"):
 		go Struct(usr.Lab, inp)
-	case strings.Contains(inp, "func"):
+	case strings.HasPrefix(inp, "func"):
 		go Func(usr, inp)
 	default:
 		go AddToMain(usr, inp)
@@ -104,73 +104,19 @@ func Struct(lab *Lab, s string) {
 }
 
 func Func(usr *User, s string) {
-	words := strings.Fields(strings.Trim(s, "{}"))
+	trimmed := strings.TrimSpace(strings.Trim(s, "{}func"))
 
-	var name string
-	var p []string
+	recv := regexp.MustCompile(`^\(.+?\b.+?\)`)
+	fnName := regexp.MustCompile(`\B\s\b.+?\b|^\b.+?\b`)
+	param := regexp.MustCompile(`\b\(.+?\b.+?\)|\(\)`)
+	retval := regexp.MustCompile(`\s\(.+?\)$|([[:alnum:]]|\*)*\b$`)
 
-	var (
-		parStart int
-		parEnd   int
-	)
+	rcv := strings.TrimSpace(recv.FindString(trimmed))
+	name := strings.TrimSpace(fnName.FindString(trimmed))
+	prm := strings.TrimSpace(param.FindString(trimmed))
+	ret := strings.TrimSpace(retval.FindString(trimmed))
 
-	for i, v := range words[1:] {
-		if strings.Contains(v, "(") {
-			p = strings.Split(v, "(")
-			name = p[0]
-			parStart = i
-			continue
-		}
-
-		if strings.Contains(v, ")") {
-			parEnd = i + 1
-			break
-		}
-	}
-
-	var (
-		retStart int
-		retEnd   int
-	)
-
-	for i, v := range words[parEnd:] {
-		if strings.Contains(v, "(") {
-			retStart = i
-			continue
-		}
-
-		if strings.Contains(v, ")") {
-			retEnd = i + 1
-			break
-		}
-	}
-
-	re := regexp.MustCompile(`^.+\(`)
-
-	params := strings.Replace(
-		strings.Join(words[parStart:parEnd], ""),
-		re.FindString(strings.Join(words[parStart:parEnd], "")),
-		"(",
-		1,
-	)
-
-	var decl string
-
-	if retStart != 0 && retEnd != 0 {
-		decl = fmt.Sprintf(
-			"func %s%s %s {\n",
-			name,
-			params,
-			strings.Join(words[retStart:retEnd], " "),
-		)
-	} else {
-		decl = fmt.Sprintf(
-			"func %s%s %s {\n",
-			name,
-			params,
-			words[len(words)-1],
-		)
-	}
+	decl := fmt.Sprintf("func %s %s%s %s {", rcv, name, prm, ret)
 
 	InsertString(usr.Lab.Main, decl, usr.Lab.MainLine-1)
 	usr.Lab.MainLine += 1

@@ -160,3 +160,11 @@ func (c *cursor) CutFirst() {
 func (c *cursor) CutLine() {
 	print("\033[2K")
 }
+
+func (c *cursor) Invisible() {
+	print("\033[?25l")
+}
+
+func (c *cursor) Normal() {
+	print("\033[?12l\033[?25h")
+}

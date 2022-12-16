@@ -37,6 +37,7 @@ as of now the only requirements that i know of for sure are as follows:
 
 3. GoImports installed, and the binary put into your $PATH or your
 $GOPATH so long as its also in your $PATH.
+	(optional but auto-importing will not work)
 
 # Installation
 
@@ -47,14 +48,17 @@ is far from conplete. this section will be updated when the project gets
 closer to being somewhere i could call packagable.
 
 TODO:
-	implement a toggled concurrently running debug mode 
-	instead of having to press ctrl-D everytime you need stats
+	syntax package *color*
 
-	generally add more features/commands
+	more debugging options
 
+	adf menus and other options
+	
 	more robust help command
 	
-	fix structs/functions
+	fix structs
 
 	redesign evaluation command.
+
+	generally add more features/commands
 

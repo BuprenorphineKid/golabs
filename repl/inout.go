@@ -13,16 +13,19 @@ import (
 // holds all the state relevent to working with the input and
 // output.
 type InOut struct {
-	reader io.Reader
-	writer io.Writer
-	Rbuf   rbuf
-	Wbuf   wbuf
-	Spbuf  spbuf
-	Mvbuf  mvbuf
-	Fbuf   fbuf
-	term   *cli.Terminal
-	lines  []line
-	done   chan struct{}
+	reader   io.Reader
+	writer   io.Writer
+	Rbuf     rbuf
+	Wbuf     wbuf
+	Spbuf    spbuf
+	Mvbuf    mvbuf
+	Fbuf     fbuf
+	term     *cli.Terminal
+	lines    []line
+	done     chan struct{}
+	debugOff chan struct{}
+	InDebug  bool
+	Debugger *Debugger
 }
 
 // Constructor function for the Input Output struct.
@@ -39,6 +42,8 @@ func NewInOut(t *cli.Terminal) *InOut {
 	i.Mvbuf = mvbuf("")
 	i.Fbuf = fbuf("")
 	i.lines = make([]line, 1, i.term.Lines)
+	i.Debugger = new(Debugger)
+	i.InDebug = false
 
 	return &i
 }
@@ -107,17 +112,26 @@ func StartInputLoop(i *InOut) line {
 	i.term.Cursor.X = len(LINELOGO)
 
 	for {
+		if i.InDebug {
+			var dbwg sync.WaitGroup
+			dbwg.Add(1)
+
+			i.Debugger.Ready <- &dbwg
+
+			dbwg.Wait()
+		}
+
 		i.done = EventChan(1)
 
 		i.read()
 
-		var wg sync.WaitGroup
-		wg.Add(1)
+		var nlwg sync.WaitGroup
+		nlwg.Add(1)
 
 		var bufs = []buffer{&i.Fbuf, &i.Rbuf, &i.Spbuf, &i.Mvbuf, &i.Wbuf}
-		go ProccessBuffers(bufs, i, &wg)
+		go ProccessBuffers(bufs, i, &nlwg)
 
-		wg.Wait()
+		nlwg.Wait()
 
 		select {
 		case <-i.done:

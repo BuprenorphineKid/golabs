@@ -10,7 +10,6 @@ well put it to a little use lol. Anyway, just keep that in mind
 and it really isnt all that bad*/
 
 import (
-	"fmt"
 	"labs/cli"
 	"os"
 	"reflect"
@@ -275,35 +274,17 @@ func DebugCheck(i *InOut, wg *sync.WaitGroup) {
 		return
 	}
 
-	i.term.Cursor.SavePos()
-	old := i.term.Cursor.Y
+	if i.InDebug {
+		i.Debugger.Off <- event{}
+		i.Debugger = new(Debugger)
+		i.InDebug = false
+	} else {
+		i.Debugger = NewDebugger()
 
-	x := i.term.Cols / 3
+		go i.Debugger.DebugMode(i)
 
-	i.term.Cursor.MoveTo(x+x, 1)
-
-	fmt.Printf("POS - |X: %d| |Y: %d|",
-		i.term.Cursor.X,
-		i.term.Cursor.Y,
-	)
-
-	i.term.Cursor.MoveTo(x+x, 2)
-
-	fmt.Printf("LINES - |count: %d|",
-		len(i.lines),
-	)
-
-	i.term.Cursor.MoveTo(x+x, 3)
-	i.term.Cursor.Y = 3
-	for n, v := range i.lines[:] {
-		fmt.Printf("%d - |%s|\n", n, string(v))
-		i.term.Cursor.AddY(1)
-
-		i.term.Cursor.MoveTo(x+x, i.term.Cursor.Y)
+		i.InDebug = true
 	}
-
-	i.term.Cursor.RestorePos()
-	i.term.Cursor.Y = old
 
 	wg.Done()
 }
