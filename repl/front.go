@@ -11,7 +11,7 @@ type User struct {
 	CmdCount  int
 	Name      string
 	CmdHist   []string
-	InFunc    bool
+	InBody    bool
 	NestDepth int
 	Eval      *Eval
 	InOut     *InOut
@@ -32,7 +32,7 @@ func NewUser(t *cli.Terminal) *User {
 	u.Lab = NewLab()
 	u.Eval = NewEval()
 
-	u.InFunc = false
+	u.InBody = false
 	u.NestDepth = 0
 
 	return &u

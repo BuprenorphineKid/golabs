@@ -255,7 +255,7 @@ func parseArrows(i *InOut, wg *sync.WaitGroup) {
 	wg.Done()
 }
 
-// Filter through in!put byte for "Quit/Kill" KeyStroke: Ctrl-C.
+// Filter through input byte for "Quit/Kill" KeyStroke: Ctrl-C.
 func killCheck(i *InOut, wg *sync.WaitGroup) {
 	if len(i.Fbuf) == 0 || string(i.Fbuf[0]) != "\x03" {
 		wg.Done()
@@ -267,9 +267,9 @@ func killCheck(i *InOut, wg *sync.WaitGroup) {
 	os.Exit(3)
 }
 
-// Filter through input byte for "Debug" KeyStroke: Ctrl-D.
+// Filter through input byte for "Debug" KeyStroke: Ctrl-B.
 func DebugCheck(i *InOut, wg *sync.WaitGroup) {
-	if len(i.Fbuf) == 0 || string(i.Fbuf[0]) != "\x04" {
+	if len(i.Fbuf) == 0 || string(i.Fbuf[0]) != "\x02" {
 		wg.Done()
 		return
 	}
@@ -298,7 +298,9 @@ func regularChars(i *InOut, wg *sync.WaitGroup) {
 	}
 
 	switch string(i.Fbuf[0]) {
-	case "\x1b", "\x0a", "\x0d", "\x03", "\x04", "\x7f", "\x09":
+	case "\x1b", "\x0a", "\x0d", "\x03", "\x04", "\x7f", "\x09", "\x11",
+		"\x12", "\x01", "\x02", "\x05", "\x06", "\x07", "\x08", "\x13":
+		//		"\x22", "\x23", "\x24", "\x25", "\x26":
 		wg.Done()
 		i.Rbuf = rbuf("")
 		return

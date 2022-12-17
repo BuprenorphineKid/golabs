@@ -48,19 +48,21 @@ is far from conplete. this section will be updated when the project gets
 closer to being somewhere i could call packagable.
 
 TODO:
-	ADD PLUGIN SUPPORT
 
-	syntax package *color*
+	|syntax package *color*
 
 	more debugging options
 
-	adf menus and other options
+	add menus and other options
 	
 	more robust help command
+
+	|redesign evaluation command.
+
+	|fix only one evaluation per session issue
+
+	|<fix tab butto>|
 	
-	fix structs
+	|implement autotab support
 
-	redesign evaluation command.
-
-	generally add more features/commands
-
+	ADD PLUGIN SUPPORT
