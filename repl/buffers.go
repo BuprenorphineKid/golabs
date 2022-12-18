@@ -111,7 +111,7 @@ func (sp spbuf) process(i *InOut) {
 		}
 
 		i.lines[i.term.Cursor.Y] = i.lines[i.term.Cursor.Y].Tab(i.term.Cursor.X)
-		i.term.Cursor.AddX(8)
+		i.term.Cursor.AddX(9)
 
 		Refresh(i)
 	}

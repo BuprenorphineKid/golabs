@@ -8,10 +8,9 @@ import (
 	"os/exec"
 	"strings"
 	"sync"
-	// "bufio"
 )
 
-func DetermCmd(usr *User, inp string) {
+func DetermCmd(usr *User, inp string, w *sync.WaitGroup) {
 	var wg sync.WaitGroup
 
 	switch inp {
@@ -24,8 +23,9 @@ func DetermCmd(usr *User, inp string) {
 	case ";help":
 		go Help()
 	default:
-		DetermDecl(usr, inp)
+		DetermDecl(usr, inp, w)
 	}
+
 }
 
 type Eval struct {
@@ -75,7 +75,7 @@ func (e *Eval) Evaluate(i *InOut, wg *sync.WaitGroup) {
 	e.LastOut, err = proc.Output()
 
 	if err != nil {
-		panic("Unfortunately Go is not installed, please install to run your code")
+		panic("Unfortunately, There Was an Error trying to run your program")
 	}
 
 	fmt.Println("\r" + string(e.LastOut) + "\r")
@@ -83,11 +83,11 @@ func (e *Eval) Evaluate(i *InOut, wg *sync.WaitGroup) {
 	func() {
 		l := len(e.LastOut) / i.term.Cols
 
-		parts := strings.Split(string(e.LastOut), "\n")
+		parts := strings.Split(string(e.LastOut)+"\n", "\n")
 
 		l += len(parts)
 
-		i.AddLines(l + 1)
+		i.AddLines(l)
 		i.term.Cursor.AddY(l)
 	}()
 

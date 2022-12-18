@@ -2,6 +2,7 @@ package repl
 
 import (
 	"labs/cli"
+	"sync"
 )
 
 // User Struct for keeping count of Hist CmdCount, yada yada.
@@ -16,6 +17,7 @@ type User struct {
 	Eval      *Eval
 	InOut     *InOut
 	Lab       *Lab
+	Shader    *Shader
 }
 
 // Creates a new User object and returns a pointer to it.
@@ -31,6 +33,7 @@ func NewUser(t *cli.Terminal) *User {
 	u.InOut = NewInOut(t)
 	u.Lab = NewLab()
 	u.Eval = NewEval()
+	u.Shader = Shader(u.InOut.lines)
 
 	u.InBody = false
 	u.NestDepth = 0
@@ -51,10 +54,13 @@ func (u *User) addCmd(cmd string) {
 
 // The main recursive loop at the top level.
 func repl(usr *User) {
-	input := StartInputLoop(usr.InOut)
+	input := StartInputLoop(usr)
 
-	DetermCmd(usr, string(input))
+	var wg sync.WaitGroup
 
+	DetermCmd(usr, string(input), &wg)
+
+	wg.Wait()
 	repl(usr)
 }
 

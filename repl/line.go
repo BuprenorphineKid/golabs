@@ -72,13 +72,11 @@ func (l *line) Tab(xpos int) line {
 	const tab = "        "
 	var pos int
 
-	if (xpos-1)-len(LINELOGO) <= 0 {
+	if xpos-1-len(LINELOGO) <= 0 {
 		pos = 0
 	} else {
-		pos = (xpos - 1) - len(LINELOGO)
+		pos = xpos - 1 - len(LINELOGO)
 	}
-
-	print(tab)
 
 	ch := make(chan line)
 

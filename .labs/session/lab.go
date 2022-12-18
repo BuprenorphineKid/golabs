@@ -1,14 +1,10 @@
 package main
 
-import "fmt"
+import(
 
-func testin() {
-	fmt.Println("\033[11mTest\033[0m")
-}
+)
+
+func  try()  {
 func main() {
-	testin()
-func  test()  {
-fmt.Println("\033[9mTest\033[0m")
-}
 
 }

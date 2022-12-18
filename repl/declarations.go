@@ -4,23 +4,27 @@ import (
 	"fmt"
 	"labs/syntax"
 	"strings"
+	"sync"
 )
 
-func DetermDecl(usr *User, inp string) {
+func DetermDecl(usr *User, inp string, wg *sync.WaitGroup) {
 	if usr.InBody == true {
 		go Body(usr, inp)
 		return
 	}
 
+	wg.Add(1)
 	switch {
 	case strings.HasPrefix(inp, "import"):
 		go Import(usr.Lab, inp)
+		wg.Done()
 	case strings.HasPrefix(inp, "type"):
-		go Type(usr, inp)
+		go Type(usr, inp, wg)
 	case strings.HasPrefix(inp, "func"):
-		go Func(usr, inp)
+		go Func(usr, inp, wg)
 	default:
 		go AddToMain(usr, inp)
+		wg.Done()
 	}
 }
 
@@ -44,7 +48,7 @@ func Import(lab *Lab, s string) {
 	lab.MainLine++
 }
 
-func Type(usr *User, s string) {
+func Type(usr *User, s string, wg *sync.WaitGroup) {
 	trimmed := strings.TrimSpace(strings.Trim(s, "{}type"))
 
 	parts := syntax.TypeParts(trimmed)
@@ -61,9 +65,11 @@ func Type(usr *User, s string) {
 		InsertString(usr.Lab.Main, dec, usr.Lab.MainLine)
 		usr.Lab.MainLine += 1
 	}
+
+	wg.Done()
 }
 
-func Func(usr *User, s string) {
+func Func(usr *User, s string, wg *sync.WaitGroup) {
 	trimmed := strings.TrimSpace(strings.Trim(s, "{}func"))
 
 	parts := syntax.FuncParts(trimmed)
@@ -74,6 +80,7 @@ func Func(usr *User, s string) {
 	usr.Lab.MainLine += 1
 	usr.InBody = true
 	usr.NestDepth += 1
+	wg.Done()
 }
 
 func Body(usr *User, bodyLine string) {
