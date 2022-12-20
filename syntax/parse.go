@@ -62,7 +62,7 @@ func Ints(s string) []string {
 	var i []string
 	var err error
 
-	for _, v := range b {
+	for _, v := range parts {
 		_, err = strconv.Atoi(v)
 		if err == nil {
 			i = append(i, v)

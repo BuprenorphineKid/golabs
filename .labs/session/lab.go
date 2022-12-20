@@ -4,7 +4,6 @@ import(
 
 )
 
-func  try()  {
 func main() {
 
 }

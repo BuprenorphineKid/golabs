@@ -13,7 +13,7 @@ import (
 // a few other env vars.
 type Terminal struct {
 	IsRaw    bool
-	Cursor   cursor
+	Cursor   Cursor
 	OldState *term.State
 	Cols     int
 	Lines    int

@@ -17,7 +17,7 @@ type User struct {
 	Eval      *Eval
 	InOut     *InOut
 	Lab       *Lab
-	Shader    *Shader
+	Shader    Shader
 }
 
 // Creates a new User object and returns a pointer to it.
@@ -33,7 +33,7 @@ func NewUser(t *cli.Terminal) *User {
 	u.InOut = NewInOut(t)
 	u.Lab = NewLab()
 	u.Eval = NewEval()
-	u.Shader = Shader(u.InOut.lines)
+	u.Shader = newHiLiter(&u.InOut.lines)
 
 	u.InBody = false
 	u.NestDepth = 0
@@ -52,7 +52,7 @@ func (u *User) addCmd(cmd string) {
 	u.CmdCount++
 }
 
-// The main recursive loop at the top level.
+// The main recursive loop at the tozp level.
 func repl(usr *User) {
 	input := StartInputLoop(usr)
 
@@ -62,20 +62,70 @@ func repl(usr *User) {
 
 	wg.Wait()
 	repl(usr)
+
+	recover()
 }
 
 // Instantiate objects and Start main loop. This is the function to
 // start the application
 func Run() {
 	cli.Ready()
+	defer cli.Restore()
 
 	term := cli.NewTerminal()
 	term.Clear()
+
 	term.RawMode()
+	defer term.Normal()
 
 	usr := NewUser(term)
 
 	logo(usr.InOut)
 
 	repl(usr)
+}
+
+// Start Input Loop that after its done reading input and
+// filling buffers, concurrently processes each.
+func StartInputLoop(usr *User) line {
+	if usr.InBody {
+		printAndPrompt(&usr.InOut.term.Cursor, &usr.InOut.lines, usr.NestDepth)
+	} else {
+		printLineLogo(&usr.InOut.term.Cursor)
+	}
+
+	usr.InOut.term.Cursor.X = len(LINELOGO)
+
+	for {
+		if usr.InOut.InDebug {
+			var dbwg sync.WaitGroup
+			dbwg.Add(1)
+			usr.InOut.Debugger.Ready <- &dbwg
+			dbwg.Wait()
+		}
+
+		usr.InOut.done = EventChan(1)
+		usr.InOut.read()
+
+		var nlwg sync.WaitGroup
+		nlwg.Add(1)
+
+		var bufs = []buffer{&usr.InOut.Fbuf, &usr.InOut.Rbuf, &usr.InOut.Spbuf, &usr.InOut.Mvbuf, &usr.InOut.Wbuf}
+		go ProccessBuffers(bufs, usr.InOut, &nlwg)
+
+		nlwg.Wait()
+
+		usr.Shader.FindLiterals()
+		out := usr.Shader.Shade(string(usr.InOut.lines[usr.InOut.term.Cursor.Y]))
+
+		RenderLine(&usr.InOut.term.Cursor, out)
+
+		select {
+		case <-usr.InOut.done:
+			return usr.InOut.lines[usr.InOut.term.Cursor.Y-1]
+		default:
+			continue
+		}
+
+	}
 }

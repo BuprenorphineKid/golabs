@@ -1,112 +1,184 @@
 package repl
 
-type Shader struct {
+import (
+	"strings"
+
+	"labs/syntax"
+)
+
+type Shader interface {
+	FindLiterals()
+	Shade(string) string
+}
+
+type HiLiter struct {
 	lines    *[]line
+	List     []string
 	done     []string
 	strings  []string
 	ints     []string
-	types    []string
-	ctrl     []string
-	funcs    []string
-	keyWords []string
+	keyWords map[string]string
+	literals []string
 }
 
-func newShader(l *[]line) *Shader {
-	s := Shader{
+func newHiLiter(l *[]line) *HiLiter {
+	s := HiLiter{
 		lines: l,
 	}
 
-	s.todo = make([]string, 0, 0)
 	s.done = make([]string, 0, 0)
 	s.strings = make([]string, 0, 0)
 	s.ints = make([]string, 0, 0)
+	s.literals = make([]string, 0, 0)
 
-	s.types = []string{
-		syntax.Blue("struct"),
-		syntax.Blue("interface"),
-		syntax.Yellow("chan"),
-		syntax.Yellow("strings"),
-		syntax.Yellow("int"),
-		syntax.Yellow("byte"),
-		syntax.Yellow("rune"),
-		syntax.Yellow("any"),
-		syntax.Yellow("comparable"),
-		syntax.Yellow("complex128"),
-		syntax.Yellow("complex64"),
-		syntax.Yellow("int8"),
-		syntax.Yellow("int16"),
-		syntax.Yellow("int32"),
-		syntax.Yellow("int64"),
-		syntax.Yellow("uint"),
-		syntax.Yellow("uint8"),
-		syntax.Yellow("uint16"),
-		syntax.Yellow("uint32"),
-		syntax.Yellow("uint64"),
-		syntax.Yellow("uintptr"),
-		syntax.Yellow("error"),
-		syntax.Yellow("float32"),
-		syntax.Yellow("float64"),
-		syntax.Yellow("bool"),
-		syntax.Magenta("nil"),
+	s.keyWords = map[string]string{
+		"struct":     syntax.Blue("struct"),
+		"interface":  syntax.Blue("interface"),
+		"chan":       syntax.Yellow("chan"),
+		"string":     syntax.Yellow("string"),
+		"int":        syntax.Yellow("int"),
+		"byte":       syntax.Yellow("byte"),
+		"rune":       syntax.Yellow("rune"),
+		"any":        syntax.Yellow("any"),
+		"comparable": syntax.Yellow("comparable"),
+		"complex128": syntax.Yellow("complex128"),
+		"complex64":  syntax.Yellow("complex64"),
+		"int8":       syntax.Yellow("int8"),
+		"int16":      syntax.Yellow("int16"),
+		"int32":      syntax.Yellow("int32"),
+		"int64":      syntax.Yellow("int64"),
+		"uint":       syntax.Yellow("uint"),
+		"uint8":      syntax.Yellow("uint8"),
+		"uint16":     syntax.Yellow("uint16"),
+		"uint32":     syntax.Yellow("uint32"),
+		"uint64":     syntax.Yellow("uint64"),
+		"uintptr":    syntax.Yellow("uintptr"),
+		"error":      syntax.Yellow("error"),
+		"fost32":     syntax.Yellow("float32"),
+		"float64":    syntax.Yellow("float64"),
+		"bool":       syntax.Yellow("bool"),
+		"nil":        syntax.Magenta("nil"),
+		"for":        syntax.Red("for"),
+		"if":         syntax.Red("if"),
+		"switch":     syntax.Red("switch"),
+		"else":       syntax.Red("else"),
+		"select":     syntax.Red("select"),
+		"recover":    syntax.Green("recover"),
+		"panic":      syntax.Green("panic"),
+		"make":       syntax.Green("make"),
+		"copy":       syntax.Green("copy"),
+		"new":        syntax.Green("new"),
+		"append":     syntax.Green("append"),
+		"len":        syntax.Green("len"),
+		"complex":    syntax.Red("complex"),
+		"imag":       syntax.Red("imag"),
+		"cap":        syntax.Red("cap"),
+		"delete":     syntax.Red("delete"),
+		"print":      syntax.Red("print"),
+		"println":    syntax.Red("println"),
+		"real":       syntax.Red("real"),
+		"close":      syntax.Red("close"),
+		"go":         syntax.Cyan("go"),
+		"return":     syntax.Red("return"),
+		"range":      syntax.Red("range"),
+		"func":       syntax.Red("func"),
+		"type":       syntax.Red("type"),
+		"true":       syntax.Magenta("true"),
+		"false":      syntax.Magenta("false"),
+		"iota":       syntax.Magenta("iota"),
+		"import":     syntax.Cyan("import"),
+		"package":    syntax.Cyan("package"),
+		"var":        syntax.Blue("var"),
+		"const":      syntax.Blue("const"),
 	}
 
-	s.ctrl = []string{
-		syntax.Red("for"),
-		syntax.Red("if"),
-		syntax.Red("switch"),
-		syntax.Red("else"),
-		syntax.Red("select"),
+	s.List = []string{
+		"struct",
+		"interface",
+		"chan",
+		"strings",
+		"int",
+		"byte",
+		"rune",
+		"any",
+		"comparable",
+		"complex128",
+		"complex64",
+		"int8",
+		"int16",
+		"int32",
+		"int64",
+		"uint",
+		"uint8",
+		"uint16",
+		"uint32",
+		"uint64",
+		"uintptr",
+		"error",
+		"float32",
+		"float64",
+		"bool",
+		"nil",
+		"for",
+		"if",
+		"switch",
+		"else",
+		"select",
+		"recover",
+		"panic",
+		"make",
+		"copy",
+		"new",
+		"append",
+		"len",
+		"complex",
+		"imag",
+		"cap",
+		"delete",
+		"print",
+		"println",
+		"real",
+		"close",
+		"go",
+		"return",
+		"range",
+		"func",
+		"type",
+		"true",
+		"false",
+		"iota",
+		"import",
+		"package",
+		"var",
+		"const",
 	}
 
-	s.funcs = []string{
-		syntax.Green("recover"),
-		syntax.Green("panic"),
-		syntax.Green("make"),
-		syntax.Green("copy"),
-		syntax.Green("new"),
-		syntax.Green("append"),
-		syntax.Green("len"),
-		syntax.Red("complex"),
-		syntax.Red("imag"),
-		syntax.Red("cap"),
-		syntax.Red("delete"),
-		syntax.Red("print"),
-		syntax.Red("println"),
-		syntax.Red("real"),
-		syntax.Red("close"),
-		syntax.Cyan("go"),
-	}
-
-	s.keyWords = []string{
-		syntax.Red("return"),
-		syntax.Red("range"),
-		syntax.Red("func"),
-		syntax.Red("type"),
-		syntax.Magenta("true"),
-		syntax.Magenta("false"),
-		syntax.Magenťa("iota"),
-		syntax.Cyan("import"),
-		syntax.Cyan("package"),
-	}
-
-	return &l
+	return &s
 }
 
-func (s *Shader) Parse(l line) {
-	for _, v := range s.lines {
-		s.strings = append(s.strings, syntax.Strings(v)...)
-		s.ints = append(s.ints, syntax.Ints(v)...)
+func (s *HiLiter) FindLiterals() {
+	for _, v := range *s.lines {
+		s.strings = append(s.strings, syntax.Strings(string(v))...)
+		s.ints = append(s.ints, syntax.Ints(string(v))...)
 	}
 
-	for i, v := range &s.strings {
+	s.literals = append(s.literals, s.strings...)
+	for i, v := range s.strings {
 		s.strings[i] = syntax.Green(v)
 	}
 
-	for i, v := range &s.ints {
-		s.ints[i] = syntax.Magrnta(v)
+	s.literals = append(s.literals, s.ints...)
+	for i, v := range s.ints {
+		s.ints[i] = syntax.Magenta(v)
 	}
 }
 
-func (s *Shader) Inject(buf) {
+func (s *HiLiter) Shade(str string) string {
+	var b string = str
 
+	for _, def := range s.List {
+		b = strings.ReplaceAll(b, def, s.keyWords[def])
+	}
+
+	return b
 }

@@ -84,7 +84,7 @@ func (sp spbuf) process(i *InOut) {
 
 		i.term.Cursor.Left()
 
-		Refresh(i)
+		RenderLine(&i.term.Cursor, string(i.lines[i.term.Cursor.Y]))
 
 		i.term.Cursor.Left()
 	case "DEL":
@@ -94,7 +94,7 @@ func (sp spbuf) process(i *InOut) {
 
 		i.lines[i.term.Cursor.Y] = i.lines[i.term.Cursor.Y].DelChar(i.term.Cursor.X)
 
-		Refresh(i)
+		RenderLine(&i.term.Cursor, string(i.lines[i.term.Cursor.Y]))
 		i.term.Cursor.Left()
 	case "NEWL":
 		i.term.Cursor.MoveTo(0, len(i.lines))
@@ -111,9 +111,9 @@ func (sp spbuf) process(i *InOut) {
 		}
 
 		i.lines[i.term.Cursor.Y] = i.lines[i.term.Cursor.Y].Tab(i.term.Cursor.X)
-		i.term.Cursor.AddX(9)
+		i.term.Cursor.AddX(8)
 
-		Refresh(i)
+		RenderLine(&i.term.Cursor, string(i.lines[i.term.Cursor.Y]))
 	}
 }
 

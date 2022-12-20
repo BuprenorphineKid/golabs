@@ -1,11 +1,9 @@
 package repl
 
 import (
-	"fmt"
 	"io"
 	"os"
 	"strings"
-	"sync"
 
 	"labs/cli"
 )
@@ -102,56 +100,5 @@ func (i *InOut) write(buf []byte) {
 
 	i.lines[i.term.Cursor.Y] = i.lines[i.term.Cursor.Y].Insert(buf, i.term.Cursor.X)
 
-	Refresh(i)
-}
-
-// Start Input Loop that after its done reading input and
-// filling buffers, concurrently processes each.
-func StartInputLoop(usr *User) line {
-	if usr.InBody {
-		usr.InOut.term.Cursor.MoveTo(len(LINELOGO)-9, usr.InOut.term.Cursor.Y)
-		fmt.Print("\033[36;1;4;9m[\033[36;4;2;9;3m-\033[0;35;4;9;1m&\033[35;9;1m?\033[0;36;1;4;9;3m-\033[0;36;4;9m]\033[0m \033[0;35;1m#\033[0m ")
-
-		for j := 0; j < usr.NestDepth; j++ {
-			usr.InOut.lines[usr.InOut.term.Cursor.Y] = usr.InOut.lines[usr.InOut.term.Cursor.Y].Tab(usr.InOut.term.Cursor.X - len(LINELOGO))
-			usr.InOut.term.Cursor.End(len(usr.InOut.lines[usr.InOut.term.Cursor.Y]) + len(LINELOGO))
-			usr.InOut.term.Cursor.AddX(8)
-			Refresh(usr.InOut)
-		}
-	} else {
-		printLineLogo(usr.InOut)
-	}
-
-	usr.InOut.term.Cursor.X = len(LINELOGO)
-
-	for {
-		if usr.InOut.InDebug {
-			var dbwg sync.WaitGroup
-			dbwg.Add(1)
-
-			usr.InOut.Debugger.Ready <- &dbwg
-
-			dbwg.Wait()
-		}
-
-		usr.InOut.done = EventChan(1)
-
-		usr.InOut.read()
-
-		var nlwg sync.WaitGroup
-		nlwg.Add(1)
-
-		var bufs = []buffer{&usr.InOut.Fbuf, &usr.InOut.Rbuf, &usr.InOut.Spbuf, &usr.InOut.Mvbuf, &usr.InOut.Wbuf}
-		go ProccessBuffers(bufs, usr.InOut, &nlwg)
-
-		nlwg.Wait()
-
-		select {
-		case <-usr.InOut.done:
-			return usr.InOut.lines[usr.InOut.term.Cursor.Y-1]
-		default:
-			continue
-		}
-
-	}
+	RenderLine(&i.term.Cursor, string(i.lines[i.term.Cursor.Y]))
 }
