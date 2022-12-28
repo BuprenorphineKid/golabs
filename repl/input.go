@@ -11,7 +11,7 @@ import (
 // Application Input and Output meshed into a single construct that
 // holds all the state relevent to working with the input and
 // output.
-type InOut struct {
+type Input struct {
 	reader   io.Reader
 	writer   io.Writer
 	Rbuf     rbuf
@@ -28,8 +28,8 @@ type InOut struct {
 }
 
 // Constructor function for the Input Output struct.
-func NewInOut(t *cli.Terminal) *InOut {
-	i := InOut{
+func NewInput(t *cli.Terminal) *Input {
+	i := Input{
 		writer: os.Stdout,
 		reader: os.Stdin,
 	}
@@ -48,7 +48,7 @@ func NewInOut(t *cli.Terminal) *InOut {
 }
 
 // InOut method for Adding n amount of lines.
-func (i *InOut) AddLines(n int) {
+func (i *Input) AddLines(n int) {
 	newlines := make([]line, n, n)
 
 	i.lines = append(i.lines, newlines...)
@@ -59,7 +59,7 @@ func (i *InOut) AddLines(n int) {
 // it recieves an escape byte, in which case 2 more bytes
 // will be read and then its entirety will be sent to the
 // Filter buffer (Fbuf)
-func (i *InOut) read() {
+func (i *Input) read() {
 	if i.term.IsRaw != true {
 		panic("Not able to enter into raw mode :(.")
 	}
@@ -93,12 +93,10 @@ func (i *InOut) read() {
 
 // the write method is used to simultaneously write to the screen
 // and to the current line.
-func (i *InOut) write(buf []byte) {
+func (i *Input) write(buf []byte) {
 	if string(buf) == "" {
 		return
 	}
 
 	i.lines[i.term.Cursor.Y] = i.lines[i.term.Cursor.Y].Insert(buf, i.term.Cursor.X)
-
-	RenderLine(&i.term.Cursor, string(i.lines[i.term.Cursor.Y]))
 }

@@ -4,27 +4,23 @@ import (
 	"fmt"
 	"labs/syntax"
 	"strings"
-	"sync"
 )
 
-func DetermDecl(usr *User, inp string, wg *sync.WaitGroup) {
+func DetermDecl(usr *User, inp string) {
 	if usr.InBody == true {
-		go Body(usr, inp)
+		Body(usr, inp)
 		return
 	}
 
-	wg.Add(1)
 	switch {
 	case strings.HasPrefix(inp, "import"):
 		go Import(usr.Lab, inp)
-		wg.Done()
 	case strings.HasPrefix(inp, "type"):
-		go Type(usr, inp, wg)
+		go Type(usr, inp)
 	case strings.HasPrefix(inp, "func"):
-		go Func(usr, inp, wg)
+		go Func(usr, inp)
 	default:
 		go AddToMain(usr, inp)
-		wg.Done()
 	}
 }
 
@@ -48,7 +44,7 @@ func Import(lab *Lab, s string) {
 	lab.MainLine++
 }
 
-func Type(usr *User, s string, wg *sync.WaitGroup) {
+func Type(usr *User, s string) {
 	trimmed := strings.TrimSpace(strings.Trim(s, "{}type"))
 
 	parts := syntax.TypeParts(trimmed)
@@ -65,11 +61,9 @@ func Type(usr *User, s string, wg *sync.WaitGroup) {
 		InsertString(usr.Lab.Main, dec, usr.Lab.MainLine)
 		usr.Lab.MainLine += 1
 	}
-
-	wg.Done()
 }
 
-func Func(usr *User, s string, wg *sync.WaitGroup) {
+func Func(usr *User, s string) {
 	trimmed := strings.TrimSpace(strings.Trim(s, "{}func"))
 
 	parts := syntax.FuncParts(trimmed)
@@ -80,10 +74,13 @@ func Func(usr *User, s string, wg *sync.WaitGroup) {
 	usr.Lab.MainLine += 1
 	usr.InBody = true
 	usr.NestDepth += 1
-	wg.Done()
 }
 
 func Body(usr *User, bodyLine string) {
+	if !usr.InBody {
+		return
+	}
+
 	if strings.Contains(bodyLine, "{") {
 		usr.NestDepth += strings.Count(bodyLine, "{")
 	}
@@ -92,7 +89,12 @@ func Body(usr *User, bodyLine string) {
 		usr.NestDepth -= strings.Count(bodyLine, "}")
 	}
 
-	InsertString(usr.Lab.Main, bodyLine+"\n", usr.Lab.MainLine)
+	var space string
+	for i := 0; i <= usr.NestDepth; i++ {
+		space += "    "
+	}
+
+	InsertString(usr.Lab.Main, space+strings.TrimLeft(bodyLine+"\n", " "), usr.Lab.MainLine)
 	usr.Lab.MainLine += 1
 
 	if usr.NestDepth <= 0 {

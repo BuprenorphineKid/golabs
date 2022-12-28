@@ -3,7 +3,7 @@ package repl
 /* I realize alot of the implementation and logic in this file can
 be a little bit hard to follow.. Its literally all because i
 couldnt let go of this little clever bit of dynamically identifying
-the line youre on by using the i.term.Cursor's Y position as the
+the line youre on by using the c's Y position as the
 array index. Like Terminal Cursor Positioning is already 1 indexed
 if you get it by means of escape sequences like i did. Might as
 well put it to a little use lol. Anyway, just keep that in mind
@@ -23,12 +23,12 @@ type wbuf []byte
 
 // Process for wbuf. Actual implementation for writing the content
 // in the wbuf
-func (w wbuf) process(i *InOut) {
+func (w wbuf) process(i *Input, c Cursor) {
 	if string(w) == "" {
 		return
 	}
 
-	oldY := i.term.Cursor.Y
+	oldY := reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int)
 
 	i.write(w)
 
@@ -36,11 +36,11 @@ func (w wbuf) process(i *InOut) {
 	newLines := len(parts) - 1
 
 	for _, v := range parts {
-		i.term.Cursor.AddX(len(v))
+		c.AddX(len(v))
 	}
 
-	i.term.Cursor.AddY(newLines)
-	newY := i.term.Cursor.Y
+	c.AddY(newLines)
+	newY := reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int)
 
 	if oldY != newY {
 		i.AddLines(newLines)
@@ -52,7 +52,7 @@ func (w wbuf) process(i *InOut) {
 type rbuf []byte
 
 // Process for rbuf. Actual implementation for rbuf
-func (r rbuf) process(i *InOut) {
+func (r rbuf) process(i *Input, c Cursor) {
 	if string(r) == "" {
 		return
 	}
@@ -65,55 +65,59 @@ type spbuf []byte
 
 // Process for spbuf. Actual implementation for the instructions
 // in the spbuf
-func (sp spbuf) process(i *InOut) {
+func (sp spbuf) process(i *Input, c Cursor) {
 	switch string(sp) {
 	case "HOME":
-		i.term.Cursor.Home(len(LINELOGO))
-		i.term.Cursor.X = len(LINELOGO)
+		c.Home(len(INPROMPT))
+		c.SetX(len(INPROMPT))
 	case "END":
-		i.term.Cursor.End(len(i.lines[i.term.Cursor.Y]) + len(LINELOGO))
-		i.term.Cursor.X = len(i.lines[i.term.Cursor.Y]) + len(LINELOGO)
+		c.End(len(i.lines[reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int)]) + len(INPROMPT))
+		c.SetX(len(i.lines[reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int)]) + len(INPROMPT))
 	case "BACK":
-		if i.term.Cursor.X <= len(LINELOGO) ||
-			i.term.Cursor.X-len(LINELOGO) > len(i.lines[i.term.Cursor.Y]) {
+		if reflect.ValueOf(c).Elem().FieldByName("X").Interface().(int) <= len(INPROMPT) ||
+			reflect.ValueOf(c).Elem().FieldByName("X").Interface().(int)-len(INPROMPT) > len(i.lines[reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int)]) {
 			return
 		}
 
-		i.lines[i.term.Cursor.Y] = i.lines[i.term.Cursor.Y].Backspace(i.term.Cursor.X)
-		i.term.Cursor.AddX(-1)
+		i.lines[reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int)] = i.lines[reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int)].Backspace(reflect.ValueOf(c).Elem().FieldByName("X").Interface().(int))
+		c.AddX(-1)
 
-		i.term.Cursor.Left()
+		c.Left()
 
-		RenderLine(&i.term.Cursor, string(i.lines[i.term.Cursor.Y]))
+		output.SetLine(string(i.lines[reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int)]))
+		output.devices["main"].(Display).RenderLine(c)
 
-		i.term.Cursor.Left()
+		c.Left()
 	case "DEL":
-		if i.term.Cursor.X < len(LINELOGO) {
+		if reflect.ValueOf(c).Elem().FieldByName("X").Interface().(int) < len(INPROMPT) ||
+			reflect.ValueOf(c).Elem().FieldByName("X").Interface().(int)-len(INPROMPT) > len(i.lines[reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int)]) {
 			return
 		}
 
-		i.lines[i.term.Cursor.Y] = i.lines[i.term.Cursor.Y].DelChar(i.term.Cursor.X)
+		i.lines[reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int)] = i.lines[reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int)].DelChar(reflect.ValueOf(c).Elem().FieldByName("X").Interface().(int))
 
-		RenderLine(&i.term.Cursor, string(i.lines[i.term.Cursor.Y]))
-		i.term.Cursor.Left()
+		output.SetLine(string(i.lines[reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int)]))
+		output.devices["main"].(Display).RenderLine(c)
 	case "NEWL":
-		i.term.Cursor.MoveTo(0, len(i.lines))
-		i.term.Cursor.AddY(len(i.lines) - i.term.Cursor.Y)
+		c.MoveTo(0, len(i.lines))
+		c.AddY(len(i.lines) - reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int))
+		c.SetX(0)
 
 		i.AddLines(1)
 
 		i.done <- event{}
 		return
 	case "TAB":
-		if i.term.Cursor.X >= i.term.Cols-8 ||
-			i.term.Cursor.X < 0 {
+		if reflect.ValueOf(c).Elem().FieldByName("X").Interface().(int) >= i.term.Cols-8 ||
+			reflect.ValueOf(c).Elem().FieldByName("X").Interface().(int) < 0 {
 			return
 		}
 
-		i.lines[i.term.Cursor.Y] = i.lines[i.term.Cursor.Y].Tab(i.term.Cursor.X)
-		i.term.Cursor.AddX(8)
+		i.lines[reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int)] = i.lines[reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int)].Tab(reflect.ValueOf(c).Elem().FieldByName("X").Interface().(int))
+		c.AddX(4)
 
-		RenderLine(&i.term.Cursor, string(i.lines[i.term.Cursor.Y]))
+		output.SetLine(string(i.lines[reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int)]))
+		output.devices["main"].(Display).RenderLine(c)
 	}
 }
 
@@ -122,36 +126,36 @@ type mvbuf []byte
 
 // Process for mvbuf. Actual implementation for the instructions
 // in the mvbuf
-func (mv mvbuf) process(i *InOut) {
+func (mv mvbuf) process(i *Input, c Cursor) {
 	switch string(mv) {
 	case "UP":
-		if i.term.Cursor.Y <= 5 {
+		if reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int) <= 5 {
 			return
 		}
 
-		i.term.Cursor.Up()
-		i.term.Cursor.AddY(-1)
+		c.Up()
+		c.AddY(-1)
 	case "DOWN":
-		if i.term.Cursor.Y >= len(i.lines)-1 {
+		if reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int) >= len(i.lines)-1 {
 			return
 		}
 
-		i.term.Cursor.Down()
-		i.term.Cursor.AddY(1)
+		c.Down()
+		c.AddY(1)
 	case "RIGHT":
-		if i.term.Cursor.X >= len(LINELOGO)+len(i.lines[i.term.Cursor.Y]) {
+		if reflect.ValueOf(c).Elem().FieldByName("X").Interface().(int) >= len(INPROMPT)+len(i.lines[reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int)]) {
 			return
 		}
 
-		i.term.Cursor.Right()
-		i.term.Cursor.AddX(1)
+		c.Right()
+		c.AddX(1)
 	case "LEFT":
-		if i.term.Cursor.X <= len(LINELOGO) {
+		if reflect.ValueOf(c).Elem().FieldByName("X").Interface().(int) <= len(INPROMPT) {
 			return
 		}
 
-		i.term.Cursor.Left()
-		i.term.Cursor.AddX(-1)
+		c.Left()
+		c.AddX(-1)
 	}
 }
 
@@ -160,12 +164,12 @@ func (mv mvbuf) process(i *InOut) {
 type fbuf []byte
 
 // Process for fbuf.
-func (f fbuf) process(i *InOut) {
+func (f fbuf) process(i *Input, c Cursor) {
 	f.filterInput(i)
 }
 
 // actual concurrent filtering of fbuf as necessary.
-func (f fbuf) filterInput(i *InOut) {
+func (f fbuf) filterInput(i *Input) {
 	var w sync.WaitGroup
 	done := make(chan struct{}, 0)
 
@@ -191,7 +195,7 @@ func (f fbuf) filterInput(i *InOut) {
 
 // Filter through in!put bytes for "Special" KeyStrokes: NL, CR, Home,
 // End, Del, etc.
-func otherSpecial(i *InOut, wg *sync.WaitGroup) {
+func otherSpecial(i *Input, wg *sync.WaitGroup) {
 	if len(i.Fbuf) == 0 {
 		wg.Done()
 		return
@@ -227,7 +231,7 @@ func otherSpecial(i *InOut, wg *sync.WaitGroup) {
 }
 
 // Filter through in!put bytes for "Movement" KeyStrokes: Arrows.
-func parseArrows(i *InOut, wg *sync.WaitGroup) {
+func parseArrows(i *Input, wg *sync.WaitGroup) {
 	if len(i.Fbuf) < 3 {
 		wg.Done()
 		return
@@ -256,7 +260,7 @@ func parseArrows(i *InOut, wg *sync.WaitGroup) {
 }
 
 // Filter through input byte for "Quit/Kill" KeyStroke: Ctrl-C.
-func killCheck(i *InOut, wg *sync.WaitGroup) {
+func killCheck(i *Input, wg *sync.WaitGroup) {
 	if len(i.Fbuf) == 0 || string(i.Fbuf[0]) != "\x03" {
 		wg.Done()
 		return
@@ -268,7 +272,7 @@ func killCheck(i *InOut, wg *sync.WaitGroup) {
 }
 
 // Filter through input byte for "Debug" KeyStroke: Ctrl-B.
-func DebugCheck(i *InOut, wg *sync.WaitGroup) {
+func DebugCheck(i *Input, wg *sync.WaitGroup) {
 	if len(i.Fbuf) == 0 || string(i.Fbuf[0]) != "\x02" {
 		wg.Done()
 		return
@@ -291,7 +295,7 @@ func DebugCheck(i *InOut, wg *sync.WaitGroup) {
 
 // Filter through input byte for "Regular" KeyStrokes: Characters,
 // Spacebar.
-func regularChars(i *InOut, wg *sync.WaitGroup) {
+func regularChars(i *Input, wg *sync.WaitGroup) {
 	if len(i.Fbuf) == 0 {
 		wg.Done()
 		return
@@ -312,15 +316,15 @@ func regularChars(i *InOut, wg *sync.WaitGroup) {
 
 // Used for referring to all buffers as one entity.
 type buffer interface {
-	process(*InOut)
+	process(*Input, Cursor)
 }
 
 // Process a slice of buffers and resetting their value back to
 // empty, individually.
-func ProccessBuffers(bufs []buffer, in *InOut, wg *sync.WaitGroup) {
+func ProccessBuffers(bufs []buffer, i *Input, c Cursor, wg *sync.WaitGroup) {
 
 	for _, v := range bufs {
-		v.process(in)
+		v.process(i, c)
 
 		reflect.ValueOf(v).Elem().SetBytes(
 			[]byte(""),

@@ -7,12 +7,11 @@ import (
 )
 
 type Shader interface {
-	FindLiterals()
+	//	FindLiterals()
 	Shade(string) string
 }
 
 type HiLiter struct {
-	lines    *[]line
 	List     []string
 	done     []string
 	strings  []string
@@ -21,10 +20,8 @@ type HiLiter struct {
 	literals []string
 }
 
-func newHiLiter(l *[]line) *HiLiter {
-	s := HiLiter{
-		lines: l,
-	}
+func newHiLiter() *HiLiter {
+	s := HiLiter{}
 
 	s.done = make([]string, 0, 0)
 	s.strings = make([]string, 0, 0)
@@ -156,22 +153,22 @@ func newHiLiter(l *[]line) *HiLiter {
 	return &s
 }
 
-func (s *HiLiter) FindLiterals() {
-	for _, v := range *s.lines {
-		s.strings = append(s.strings, syntax.Strings(string(v))...)
-		s.ints = append(s.ints, syntax.Ints(string(v))...)
-	}
-
-	s.literals = append(s.literals, s.strings...)
-	for i, v := range s.strings {
-		s.strings[i] = syntax.Green(v)
-	}
-
-	s.literals = append(s.literals, s.ints...)
-	for i, v := range s.ints {
-		s.ints[i] = syntax.Magenta(v)
-	}
-}
+//func (s *HiLiter) FindLiterals() {
+//	for _, v := range *s.lines {
+//		s.strings = append(s.strings, syntax.Strings(string(v))...)
+//		s.ints = append(s.ints, syntax.Ints(string(v))...)
+//	}
+//
+//	s.literals = append(s.literals, s.strings...)
+//	for i, v := range s.strings {
+//		s.strings[i] = syntax.Green(v)
+//	}
+//
+//	s.literals = append(s.literals, s.ints...)
+//	for i, v := range s.ints {
+//		s.ints[i] = syntax.Magenta(v)
+//	}
+//}
 
 func (s *HiLiter) Shade(str string) string {
 	var b string = str

@@ -48,8 +48,16 @@ func (c *Cursor) Down() {
 	print("\033[B")
 }
 
+func (c *Cursor) SetX(n int) {
+	c.X = n
+}
+
 func (c *Cursor) AddX(n int) {
 	c.X = c.X + n
+}
+
+func (c *Cursor) SetY(n int) {
+	c.Y = n
 }
 
 func (c *Cursor) AddY(n int) {

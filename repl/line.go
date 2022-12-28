@@ -15,7 +15,7 @@ func (l *line) Backspace(xpos int) line {
 	ch := make(chan line)
 
 	go func() {
-		pos := (xpos - 1) - len(LINELOGO)
+		pos := (xpos - 1) - len(INPROMPT)
 		b := []byte(*l)
 
 		front := b[:pos]
@@ -31,11 +31,11 @@ func (l *line) Backspace(xpos int) line {
 // Line method used to delete a character that the cursor is highliting
 // whenever the del button is pressed.
 func (l *line) DelChar(xpos int) line {
-	if (xpos-1)-len(LINELOGO)+1 > len(*l)-1 {
+	if (xpos-1)-len(INPROMPT)+1 > len(*l)-1 {
 		return *l
 	}
 
-	if (xpos-1)-len(LINELOGO)+1 == len(*l)-1 {
+	if (xpos-1)-len(INPROMPT)+1 == len(*l)-1 {
 		if len(*l) == 1 {
 			return line("")
 		}
@@ -45,10 +45,10 @@ func (l *line) DelChar(xpos int) line {
 	}
 	var pos int
 
-	if (xpos-1)-len(LINELOGO) < 0 {
+	if (xpos-1)-len(INPROMPT) < 0 {
 		pos = 0
 	} else {
-		pos = (xpos - 1) - len(LINELOGO)
+		pos = (xpos - 1) - len(INPROMPT)
 	}
 
 	ch := make(chan line)
@@ -69,13 +69,13 @@ func (l *line) DelChar(xpos int) line {
 // Line method to margin the text. done with 8 spaces rather than a
 // single tab, strictly due to convenience.
 func (l *line) Tab(xpos int) line {
-	const tab = "        "
+	const tab = "    "
 	var pos int
 
-	if xpos-1-len(LINELOGO) <= 0 {
+	if xpos-1-len(INPROMPT) <= 0 {
 		pos = 0
 	} else {
-		pos = xpos - 1 - len(LINELOGO)
+		pos = xpos - 1 - len(INPROMPT)
 	}
 
 	ch := make(chan line)
@@ -100,10 +100,10 @@ func (l *line) Tab(xpos int) line {
 func (l *line) Insert(char []byte, xpos int) line {
 	var pos int
 
-	if (xpos-1)-len(LINELOGO) <= 0 {
+	if (xpos-1)-len(INPROMPT) <= 0 {
 		return l.Write(char, xpos)
 	} else {
-		pos = (xpos - 1) - len(LINELOGO)
+		pos = (xpos - 1) - len(INPROMPT)
 	}
 
 	ch := make(chan line)
@@ -125,7 +125,7 @@ func (l *line) Insert(char []byte, xpos int) line {
 // Only use this method for the start of a line where deciding the
 // cutting positions would cause a panic.
 func (l *line) Write(char []byte, xpos int) line {
-	if (xpos-1)-len(LINELOGO) > 0 {
+	if (xpos-1)-len(INPROMPT) > 0 {
 		return l.Insert(char, xpos)
 	}
 

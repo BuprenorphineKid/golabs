@@ -3,95 +3,19 @@ package repl
 import (
 	"bufio"
 	"fmt"
-	"io"
 	"os"
-	"os/exec"
-	"strings"
-	"sync"
 )
 
-func DetermCmd(usr *User, inp string, w *sync.WaitGroup) {
-	var wg sync.WaitGroup
-
+func DetermCmd(usr *User, inp string) {
 	switch inp {
-	case ";eval":
-		wg.Add(1)
-		go usr.Eval.Evaluate(usr.InOut, &wg)
-		wg.Wait()
 	case ";save":
 		Save()
 	case ";help":
 		go Help()
 	default:
-		DetermDecl(usr, inp, w)
+		DetermDecl(usr, inp)
 	}
 
-}
-
-type Eval struct {
-	stdin   io.Reader
-	stderr  io.Writer
-	file    string
-	LastOut []byte
-}
-
-func NewEval() *Eval {
-	e := Eval{
-		stdin:  os.Stdin,
-		stderr: os.Stderr,
-		file:   ".labs/session/lab.go",
-	}
-
-	return &e
-}
-
-func (e *Eval) Evaluate(i *InOut, wg *sync.WaitGroup) {
-	var err error
-
-	imp := exec.Command("goimports", "-w", e.file)
-	imp.Stderr = e.stderr
-	imp.Stdin = e.stdin
-
-	err = imp.Start()
-	if err != nil {
-		fmt := exec.Command("go", "fmt", e.file)
-		fmt.Stderr = e.stderr
-		fmt.Stdin = e.stdin
-
-		err = fmt.Start()
-		if err != nil {
-			panic(err)
-		}
-
-		fmt.Wait()
-	}
-
-	proc := exec.Command("go", "run", e.file)
-	proc.Stderr = e.stderr
-	proc.Stdin = e.stdin
-
-	imp.Wait()
-
-	e.LastOut, err = proc.Output()
-
-	if err != nil {
-		panic("Unfortunately, There Was an Error trying to run your program")
-	}
-
-	fmt.Println("\r" + string(e.LastOut) + "\r")
-
-	func() {
-		l := len(e.LastOut) / i.term.Cols
-
-		parts := strings.Split(string(e.LastOut)+"\n", "\n")
-
-		l += len(parts)
-
-		i.AddLines(l)
-		i.term.Cursor.AddY(l)
-	}()
-
-	wg.Done()
 }
 
 func Save() {

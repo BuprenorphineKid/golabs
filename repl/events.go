@@ -1,10 +1,14 @@
 package repl
 
-type event struct{}
+/*
+making BackGround Events, namely, evaluator, who is constantly running the
+beneath go script for Instant results ready, on the fly. rather than having to
+type the ";eval command. the event is passed in two chans a done chan, and
+results chan, results is what gets returned upon calling the Ping method.
+neatly structured into an anonymous struct"
+*/
 
-type Event interface {
-	event | bool | struct{}
-}
+type event struct{}
 
 func EventChan(n ...int) chan struct{} {
 	if len(n) > 1 {
