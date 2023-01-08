@@ -1,10 +1,11 @@
 package repl
 
 import (
-	"labs/cli"
-	"os"
+	"labs/pkg/cli"
 	"sync"
 )
+
+var term = cli.NewTerminal()
 
 type Cursor interface {
 	MoveTo(int, int)
@@ -77,30 +78,36 @@ func Run() {
 	cli.Ready()
 	defer cli.Restore()
 
-	term := cli.NewTerminal()
 	term.Clear()
 	term.RawMode()
 	defer term.Normal()
 
 	lgr := NewLog()
-
-	controller := newController()
 	usr := NewUser(term)
+	logo(usr.Input, &term.Cursor)
+
 	usr.Logger = lgr
 
 	output.Register("main", newScreen())
 
-	logo(usr.Input)
+	for {
+		outCh := Take(usr)
 
-	for len(controller.procs) == 0 {
-		go repl(usr, controller)
+		select {
+		case res := <-outCh:
+			println(outCh)
+			Give(usr, res)
+		}
 	}
-
-	controller.Run(usr.Input, &usr.Input.term.Cursor, usr.Logger)
 }
 
-// The main recursive loop at the top level.
-func repl(usr *User, cntrl *Controller) {
+func Give(u *User, s string) {
+	output.SetLine(s)
+	output.devices["main"].(Display).RenderLine(&u.Input.term.Cursor)
+}
+
+// The main loop at the top level.
+func Take(usr *User) chan string {
 	if usr.InBody {
 		output.devices["main"].(Display).PrintAndPrompt(&usr.Input.term.Cursor, &usr.Input.lines, usr.NestDepth)
 	} else {
@@ -109,19 +116,18 @@ func repl(usr *User, cntrl *Controller) {
 
 	input := GetLine(usr.Input)
 
-	DetermCmd(usr, string(input))
+	DetermCmd(usr, string(*input))
 
-	runner := newgoRunner()
-	var contents, _ = os.ReadFile(usr.Lab.Main)
+	output := make(chan string)
 
-	cntrl.Add(runner, contents)
+	go Eval(*usr, output)
 
-	repl(usr, cntrl)
+	return output
 }
 
 // Start Input Loop that after its done reading input and
 // filling buffers, concurrently processes each.
-func GetLine(i *Input) line {
+func GetLine(i *Input) *line {
 	for {
 		if i.InDebug {
 			var dbwg sync.WaitGroup
@@ -146,7 +152,7 @@ func GetLine(i *Input) line {
 
 		select {
 		case <-i.done:
-			return i.lines[i.term.Cursor.Y-1]
+			return &i.lines[i.term.Cursor.Y-1]
 		default:
 			continue
 		}

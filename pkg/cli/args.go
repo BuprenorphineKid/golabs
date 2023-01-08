@@ -2,7 +2,6 @@ package cli
 
 import (
 	"flag"
-	"io/ioutil"
 	"os"
 )
 
@@ -25,7 +24,7 @@ func NewContent() *Content {
 
 // Load it up
 func (c *Content) Load(file string) {
-	l, err := ioutil.ReadFile(file)
+	l, err := os.ReadFile(file)
 
 	if err != nil {
 		panic(err)

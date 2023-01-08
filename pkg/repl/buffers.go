@@ -10,7 +10,7 @@ well put it to a little use lol. Anyway, just keep that in mind
 and it really isnt all that bad*/
 
 import (
-	"labs/cli"
+	"labs/pkg/cli"
 	"os"
 	"reflect"
 	"strings"

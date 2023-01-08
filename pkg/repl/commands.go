@@ -8,9 +8,9 @@ import (
 
 func DetermCmd(usr *User, inp string) {
 	switch inp {
-	case ";save":
+	case "!save":
 		Save()
-	case ";help":
+	case "!help":
 		go Help()
 	default:
 		DetermDecl(usr, inp)

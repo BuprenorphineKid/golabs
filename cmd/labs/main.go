@@ -1,8 +1,8 @@
 package main
 
 import (
-	"labs/cli"
-	"labs/repl"
+	"labs/pkg/cli"
+	"labs/pkg/repl"
 )
 
 func main() {

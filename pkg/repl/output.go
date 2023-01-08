@@ -71,6 +71,7 @@ type Display interface {
 	RenderLine(Cursor)
 	PrintBuffer()
 	PrintInPrompt(Cursor)
+	PrintOutPrompt(Cursor)
 	PrintAndPrompt(Cursor, *[]line, int)
 }
 
@@ -116,17 +117,23 @@ func (s *Screen) RenderLine(c Cursor) {
 // Move Cursor to true beginning of current line, and prints the Colored
 // INPROMPT (CINPROMPT) constant.
 func (s *Screen) PrintInPrompt(c Cursor) {
+	c.Invisible()
+
 	c.MoveTo(0, reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int))
 	fmt.Print(CINPROMPT)
-	c.AddX(len(INPROMPT))
+	c.SetX(len(INPROMPT))
+
+	c.Normal()
 }
 
 // Move Cursor to relative beginning of curent line, then prints thd Colored
 // AND PROMPT (CANDPROMPT) constant.
 func (s *Screen) PrintAndPrompt(c Cursor, ln *[]line, depth int) {
+	c.Invisible()
+
 	l := *ln
 
-	c.MoveTo(len(INPROMPT)-len(ANDPROMPT)-1, reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int))
+	c.MoveTo(len(INPROMPT)-len(ANDPROMPT), reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int))
 	fmt.Print(CANDPROMPT)
 	c.MoveTo(len(INPROMPT), reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int))
 	c.SetX(len(INPROMPT))
@@ -138,4 +145,17 @@ func (s *Screen) PrintAndPrompt(c Cursor, ln *[]line, depth int) {
 		c.AddX(4)
 		s.RenderLine(c)
 	}
+
+	c.Normal()
+}
+
+func (s *Screen) PrintOutPrompt(c Cursor) {
+	c.Invisible()
+
+	c.MoveTo(len(INPROMPT)-len(OUTPROMPT), reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int))
+	fmt.Print(COUTPROMPT)
+	c.MoveTo(len(INPROMPT), reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int))
+	c.SetX(len(INPROMPT))
+
+	c.Normal()
 }

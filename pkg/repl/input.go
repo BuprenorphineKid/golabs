@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"labs/cli"
+	"labs/pkg/cli"
 )
 
 // Application Input and Output meshed into a single construct that

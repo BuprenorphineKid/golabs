@@ -3,7 +3,7 @@ package repl
 import (
 	"strings"
 
-	"labs/syntax"
+	"labs/pkg/syntax"
 )
 
 type Shader interface {

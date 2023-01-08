@@ -1,9 +1,6 @@
 package main
 
-import "fmt"
-
 func main() {
-	var a = 12
-	fmt.Println(a)
+	var a = 1
 
 }

@@ -2,7 +2,7 @@ package repl
 
 import (
 	"fmt"
-	"labs/syntax"
+	"labs/pkg/syntax"
 	"strings"
 )
 
@@ -14,20 +14,21 @@ func DetermDecl(usr *User, inp string) {
 
 	switch {
 	case strings.HasPrefix(inp, "import"):
-		go Import(usr.Lab, inp)
+		Import(usr.Lab, inp)
 	case strings.HasPrefix(inp, "type"):
-		go Type(usr, inp)
+		Type(usr, inp)
 	case strings.HasPrefix(inp, "func"):
-		go Func(usr, inp)
+		Func(usr, inp)
 	default:
-		go AddToMain(usr, inp)
+		AddToMain(usr, inp)
 	}
 }
 
-func AddToMain(usr *User, row string) {
-	InsertString(usr.Lab.Main, row+"\n", usr.Lab.MainLine+usr.CmdCount)
+func AddToMain(usr *User, inp string) {
 
-	usr.addCmd(row)
+	InsertString(usr.Lab.Main, inp+"\n", usr.Lab.MainLine+usr.CmdCount)
+
+	usr.addCmd(inp)
 }
 
 func Import(lab *Lab, s string) {

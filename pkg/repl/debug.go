@@ -56,7 +56,7 @@ func (d *Debugger) CleanUp(i *Input) {
 	i.term.Cursor.CutRest()
 	i.term.Cursor.Y = 3
 
-	for _ = range i.lines[5:] {
+	for range i.lines[5:] {
 		i.term.Cursor.CutRest()
 		i.term.Cursor.MoveTo(x+x, i.term.Cursor.Y+1)
 		i.term.Cursor.AddY(1)
