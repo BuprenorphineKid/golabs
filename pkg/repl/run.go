@@ -39,6 +39,7 @@ type User struct {
 	Lab       *Lab
 	Logger    *Log
 	done      chan struct{}
+	FileLock  *sync.Mutex
 }
 
 // Creates a new User object and returns a pointer to it.
@@ -56,6 +57,7 @@ func NewUser(t *cli.Terminal) *User {
 
 	u.InBody = false
 	u.NestDepth = 0
+	u.FileLock = new(sync.Mutex)
 
 	return &u
 }
@@ -94,20 +96,29 @@ func Run() {
 		outCh := Take(usr)
 
 		select {
-		case res := <-outCh:
-			println(outCh)
-			Give(usr, res)
+		case vfy := <-outCh:
+			func() {
+				if vfy.ok == false {
+					return
+				}
+
+				Give(usr, vfy.results)
+			}()
 		}
 	}
 }
 
 func Give(u *User, s string) {
 	output.SetLine(s)
+	output.devices["main"].(Display).PrintOutPrompt(&u.Input.term.Cursor)
 	output.devices["main"].(Display).RenderLine(&u.Input.term.Cursor)
+
+	u.Input.AddLines(2)
+	u.Input.term.Cursor.AddY(2)
 }
 
 // The main loop at the top level.
-func Take(usr *User) chan string {
+func Take(usr *User) chan printSlip {
 	if usr.InBody {
 		output.devices["main"].(Display).PrintAndPrompt(&usr.Input.term.Cursor, &usr.Input.lines, usr.NestDepth)
 	} else {
@@ -116,11 +127,10 @@ func Take(usr *User) chan string {
 
 	input := GetLine(usr.Input)
 
-	DetermCmd(usr, string(*input))
+	DetermCmd(usr, string(*input), usr.FileLock)
+	output := make(chan printSlip)
 
-	output := make(chan string)
-
-	go Eval(*usr, output)
+	go Eval(*usr, output, usr.FileLock)
 
 	return output
 }

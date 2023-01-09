@@ -4,9 +4,12 @@ import (
 	"fmt"
 	"labs/pkg/syntax"
 	"strings"
+	"sync"
 )
 
-func DetermDecl(usr *User, inp string) {
+func DetermDecl(usr *User, inp string, m *sync.Mutex) {
+	m.Lock()
+
 	if usr.InBody == true {
 		Body(usr, inp)
 		return
@@ -22,6 +25,8 @@ func DetermDecl(usr *User, inp string) {
 	default:
 		AddToMain(usr, inp)
 	}
+
+	m.Unlock()
 }
 
 func AddToMain(usr *User, inp string) {

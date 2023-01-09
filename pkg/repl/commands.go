@@ -4,16 +4,17 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"sync"
 )
 
-func DetermCmd(usr *User, inp string) {
+func DetermCmd(usr *User, inp string, m *sync.Mutex) {
 	switch inp {
 	case "!save":
 		Save()
 	case "!help":
 		go Help()
 	default:
-		DetermDecl(usr, inp)
+		DetermDecl(usr, inp, m)
 	}
 
 }
