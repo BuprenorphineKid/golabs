@@ -7,8 +7,9 @@ import (
 	"sync"
 )
 
-func DetermDecl(usr *User, inp string, m *sync.Mutex) {
+func DetermDecl(usr *User, inp string, m sync.Locker) {
 	m.Lock()
+	defer m.Unlock()
 
 	if usr.InBody == true {
 		Body(usr, inp)
@@ -26,7 +27,6 @@ func DetermDecl(usr *User, inp string, m *sync.Mutex) {
 		AddToMain(usr, inp)
 	}
 
-	m.Unlock()
 }
 
 func AddToMain(usr *User, inp string) {

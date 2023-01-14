@@ -2,7 +2,6 @@ package repl
 
 import (
 	"fmt"
-	"reflect"
 )
 
 // Implimented to be s subject for observer pattern.
@@ -106,11 +105,11 @@ func (s *Screen) PrintBuffer() {
 // typed.
 func (s *Screen) RenderLine(c Cursor) {
 	c.Invisible()
-	c.MoveTo(len(INPROMPT), reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int))
+	c.MoveTo(len(INPROMPT), c.GetY())
 	c.CutRest()
 	s.PrintBuffer()
 
-	c.MoveTo(reflect.ValueOf(c).Elem().FieldByName("X").Interface().(int), reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int))
+	c.MoveTo(c.GetX(), c.GetY())
 	c.Normal()
 }
 
@@ -119,7 +118,7 @@ func (s *Screen) RenderLine(c Cursor) {
 func (s *Screen) PrintInPrompt(c Cursor) {
 	c.Invisible()
 
-	c.MoveTo(0, reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int))
+	c.MoveTo(0, c.GetY())
 	fmt.Print(CINPROMPT)
 	c.SetX(len(INPROMPT))
 
@@ -133,13 +132,13 @@ func (s *Screen) PrintAndPrompt(c Cursor, ln *[]line, depth int) {
 
 	l := *ln
 
-	c.MoveTo(len(INPROMPT)-len(ANDPROMPT), reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int))
+	c.MoveTo(len(INPROMPT)-len(ANDPROMPT), c.GetY())
 	fmt.Print(CANDPROMPT)
-	c.MoveTo(len(INPROMPT), reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int))
+	c.MoveTo(len(INPROMPT), c.GetY())
 	c.SetX(len(INPROMPT))
 
 	for j := 0; j < depth; j++ {
-		l[reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int)] = l[reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int)].Tab(reflect.ValueOf(c).Elem().FieldByName("X").Interface().(int))
+		l[c.GetY()] = l[c.GetY()].Tab(c.GetX())
 		Tab()
 
 		c.AddX(4)
@@ -152,9 +151,9 @@ func (s *Screen) PrintAndPrompt(c Cursor, ln *[]line, depth int) {
 func (s *Screen) PrintOutPrompt(c Cursor) {
 	c.Invisible()
 
-	c.MoveTo(len(INPROMPT)-len(OUTPROMPT), reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int))
+	c.MoveTo(len(INPROMPT)-len(OUTPROMPT), c.GetY())
 	fmt.Print(COUTPROMPT)
-	c.MoveTo(len(INPROMPT), reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int))
+	c.MoveTo(len(INPROMPT), c.GetY())
 	c.SetX(len(INPROMPT))
 
 	c.Normal()

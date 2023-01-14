@@ -7,7 +7,7 @@ import (
 	"sync"
 )
 
-func DetermCmd(usr *User, inp string, m *sync.Mutex) {
+func DetermCmd(usr *User, inp string, m sync.Locker) {
 	switch inp {
 	case "!save":
 		Save()

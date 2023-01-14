@@ -48,6 +48,14 @@ func (c *Cursor) Down() {
 	print("\033[B")
 }
 
+func (c *Cursor) GetX() int {
+	return c.X
+}
+
+func (c *Cursor) GetY() int {
+	return c.Y
+}
+
 func (c *Cursor) SetX(n int) {
 	c.X = n
 }

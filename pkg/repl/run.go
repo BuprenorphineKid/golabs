@@ -16,6 +16,8 @@ type Cursor interface {
 	AddY(int)
 	SetX(int)
 	SetY(int)
+	GetX() int
+	GetY() int
 	SavePos()
 	RestorePos()
 	Invisible()
@@ -39,7 +41,7 @@ type User struct {
 	Lab       *Lab
 	Logger    *Log
 	done      chan struct{}
-	FileLock  *sync.Mutex
+	FileLock  *sync.RWMutex
 }
 
 // Creates a new User object and returns a pointer to it.
@@ -57,7 +59,7 @@ func NewUser(t *cli.Terminal) *User {
 
 	u.InBody = false
 	u.NestDepth = 0
-	u.FileLock = new(sync.Mutex)
+	u.FileLock = new(sync.RWMutex)
 
 	return &u
 }
@@ -128,9 +130,10 @@ func Take(usr *User) chan printSlip {
 	input := GetLine(usr.Input)
 
 	DetermCmd(usr, string(*input), usr.FileLock)
-	output := make(chan printSlip)
 
-	go Eval(*usr, output, usr.FileLock)
+	output := make(chan printSlip)
+	e := NewEvaluator(usr.Lab.Main, usr.FileLock)
+	go e.Exec(output)
 
 	return output
 }

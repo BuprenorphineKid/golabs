@@ -28,7 +28,7 @@ func (w wbuf) process(i *Input, c Cursor) {
 		return
 	}
 
-	oldY := reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int)
+	oldY := c.GetY()
 
 	i.write(w)
 
@@ -40,7 +40,7 @@ func (w wbuf) process(i *Input, c Cursor) {
 	}
 
 	c.AddY(newLines)
-	newY := reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int)
+	newY := c.GetY()
 
 	if oldY != newY {
 		i.AddLines(newLines)
@@ -71,36 +71,36 @@ func (sp spbuf) process(i *Input, c Cursor) {
 		c.Home(len(INPROMPT))
 		c.SetX(len(INPROMPT))
 	case "END":
-		c.End(len(i.lines[reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int)]) + len(INPROMPT))
-		c.SetX(len(i.lines[reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int)]) + len(INPROMPT))
+		c.End(len(i.lines[c.GetY()]) + len(INPROMPT))
+		c.SetX(len(i.lines[c.GetY()]) + len(INPROMPT))
 	case "BACK":
-		if reflect.ValueOf(c).Elem().FieldByName("X").Interface().(int) <= len(INPROMPT) ||
-			reflect.ValueOf(c).Elem().FieldByName("X").Interface().(int)-len(INPROMPT) > len(i.lines[reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int)]) {
+		if c.GetX() <= len(INPROMPT) ||
+			c.GetX()-len(INPROMPT) > len(i.lines[c.GetY()]) {
 			return
 		}
 
-		i.lines[reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int)] = i.lines[reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int)].Backspace(reflect.ValueOf(c).Elem().FieldByName("X").Interface().(int))
+		i.lines[c.GetY()] = i.lines[c.GetY()].Backspace(c.GetX())
 		c.AddX(-1)
 
 		c.Left()
 
-		output.SetLine(string(i.lines[reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int)]))
+		output.SetLine(string(i.lines[c.GetY()]))
 		output.devices["main"].(Display).RenderLine(c)
 
 		c.Left()
 	case "DEL":
-		if reflect.ValueOf(c).Elem().FieldByName("X").Interface().(int) < len(INPROMPT) ||
-			reflect.ValueOf(c).Elem().FieldByName("X").Interface().(int)-len(INPROMPT) > len(i.lines[reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int)]) {
+		if c.GetX() < len(INPROMPT) ||
+			c.GetX()-len(INPROMPT) > len(i.lines[c.GetY()]) {
 			return
 		}
 
-		i.lines[reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int)] = i.lines[reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int)].DelChar(reflect.ValueOf(c).Elem().FieldByName("X").Interface().(int))
+		i.lines[c.GetY()] = i.lines[c.GetY()].DelChar(c.GetX())
 
-		output.SetLine(string(i.lines[reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int)]))
+		output.SetLine(string(i.lines[c.GetY()]))
 		output.devices["main"].(Display).RenderLine(c)
 	case "NEWL":
 		c.MoveTo(0, len(i.lines))
-		c.AddY(len(i.lines) - reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int))
+		c.AddY(len(i.lines) - c.GetY())
 		c.SetX(0)
 
 		i.AddLines(1)
@@ -108,15 +108,15 @@ func (sp spbuf) process(i *Input, c Cursor) {
 		i.done <- event{}
 		return
 	case "TAB":
-		if reflect.ValueOf(c).Elem().FieldByName("X").Interface().(int) >= i.term.Cols-8 ||
-			reflect.ValueOf(c).Elem().FieldByName("X").Interface().(int) < 0 {
+		if c.GetX() >= i.term.Cols-8 ||
+			c.GetX() < 0 {
 			return
 		}
 
-		i.lines[reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int)] = i.lines[reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int)].Tab(reflect.ValueOf(c).Elem().FieldByName("X").Interface().(int))
+		i.lines[c.GetY()] = i.lines[c.GetY()].Tab(c.GetX())
 		c.AddX(4)
 
-		output.SetLine(string(i.lines[reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int)]))
+		output.SetLine(string(i.lines[c.GetY()]))
 		output.devices["main"].(Display).RenderLine(c)
 	}
 }
@@ -129,28 +129,38 @@ type mvbuf []byte
 func (mv mvbuf) process(i *Input, c Cursor) {
 	switch string(mv) {
 	case "UP":
-		if reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int) <= 5 {
+		if c.GetY() <= 5 {
 			return
 		}
 
 		c.Up()
 		c.AddY(-1)
+
+		if c.GetX() > len(i.lines[c.GetY()])+len(INPROMPT) {
+			c.MoveTo(len(i.lines[c.GetY()])+len(INPROMPT), c.GetY())
+			c.SetX(len(i.lines[c.GetY()]) + len(INPROMPT))
+		}
 	case "DOWN":
-		if reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int) >= len(i.lines)-1 {
+		if c.GetY() >= len(i.lines)-1 {
 			return
 		}
 
 		c.Down()
 		c.AddY(1)
+
+		if c.GetX() > len(i.lines[c.GetY()])+len(INPROMPT) {
+			c.MoveTo(len(i.lines[c.GetY()])+len(INPROMPT), c.GetY())
+			c.SetX(len(i.lines[c.GetY()]) + len(INPROMPT))
+		}
 	case "RIGHT":
-		if reflect.ValueOf(c).Elem().FieldByName("X").Interface().(int) >= len(INPROMPT)+len(i.lines[reflect.ValueOf(c).Elem().FieldByName("Y").Interface().(int)]) {
+		if c.GetX() >= len(INPROMPT)+len(i.lines[c.GetY()]) {
 			return
 		}
 
 		c.Right()
 		c.AddX(1)
 	case "LEFT":
-		if reflect.ValueOf(c).Elem().FieldByName("X").Interface().(int) <= len(INPROMPT) {
+		if c.GetX() <= len(INPROMPT) {
 			return
 		}
 

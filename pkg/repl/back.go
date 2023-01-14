@@ -41,7 +41,10 @@ func (c *Content) Reload() {
 
 // Write session file, duh
 func (c *Content) writeSessionFile(content []byte) {
-	os.Mkdir(".labs/session", 0777)
+	err := os.MkdirAll(".labs/session", 0777)
+	if err != nil {
+		panic(PERMERROR)
+	}
 
 	proj, _ := os.Create(".labs/session/lab.go")
 	defer proj.Close()
@@ -57,6 +60,7 @@ func (c *Content) Setup() {
 // Main Session struct to hold state
 type Lab struct {
 	Main       string
+	Variables  string
 	Lines      []string
 	MainLine   int
 	ImportLine int
@@ -66,15 +70,20 @@ type Lab struct {
 func NewLab() *Lab {
 	l := Lab{}
 	l.Main = ".labs/session/lab.go"
+	l.Variables = ".labs/session/vars/"
 	l.Lines, _ = file2lines(".labs/session/lab.go")
+
+	err := os.MkdirAll(l.Variables, 0777)
+	if err != nil {
+		panic(PERMERROR)
+	}
 
 	var (
 		ich  = make(chan int)
 		mch  = make(chan int)
 		done = EventChan(1)
+		wg   sync.WaitGroup
 	)
-
-	var wg sync.WaitGroup
 
 	wg.Add(2)
 

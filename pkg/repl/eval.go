@@ -16,23 +16,25 @@ type printSlip struct {
 }
 
 type Evaluator struct {
+	*sync.RWMutex
 	imports *exec.Cmd
 	format  *exec.Cmd
 	run     *exec.Cmd
 	file    string
 }
 
-func NewEvaluator(path string, m *sync.Mutex) *Evaluator {
-	m.Lock()
-
+func NewEvaluator(path string, m *sync.RWMutex) *Evaluator {
 	e := new(Evaluator)
+	e.RWMutex = m
 	e.file = ".labs/session/eval.go"
 
+	e.RLock()
 	cont, _ := os.ReadFile(path)
+	e.RUnlock()
 
+	e.Lock()
 	_ = os.WriteFile(e.file, cont, 0777)
-
-	m.Unlock()
+	e.Unlock()
 
 	e.imports = exec.Command("goimports", "-w", e.file)
 	e.imports.Stdin = os.Stdin
@@ -46,24 +48,26 @@ func NewEvaluator(path string, m *sync.Mutex) *Evaluator {
 	return e
 }
 
-func Eval(usr User, output chan printSlip, m *sync.Mutex) {
-	eval := NewEvaluator(usr.Lab.Main, m)
-
-	err := eval.imports.Run()
+func (e *Evaluator) Exec(output chan printSlip) {
+	e.RLock()
+	defer e.RUnlock()
+	err := e.imports.Run()
 
 	if err != nil {
-		err := eval.format.Run()
+
+		err := e.format.Run()
 
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		eval.format.Wait()
+		e.format.Wait()
+
 	}
 
-	eval.imports.Wait()
+	e.imports.Wait()
 
-	res, err := eval.run.CombinedOutput()
+	res, err := e.run.CombinedOutput()
 
 	if err != nil {
 		re := regexp.MustCompile(`(?s:.+:\d+:\s)`)
@@ -76,7 +80,10 @@ func Eval(usr User, output chan printSlip, m *sync.Mutex) {
 		}
 
 		output <- printSlip{results: fmt.Sprintf("Err: %v", strings.TrimSpace(string(f))), ok: true}
+
+		return
 	}
 
 	output <- printSlip{results: string(res), ok: true}
+
 }
