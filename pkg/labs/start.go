@@ -1,4 +1,4 @@
-package repl
+package labs
 
 import (
 	"bufio"
@@ -32,13 +32,6 @@ func (c *Content) Load(file string) {
 	c.Loaded = l
 }
 
-// After an eval, placements in script lost for some reason
-// so this is for reloading session file to be ready for
-// eval again
-func (c *Content) Reload() {
-
-}
-
 // Write session file, duh
 func (c *Content) writeSessionFile(content []byte) {
 	err := os.MkdirAll(".labs/session", 0777)
@@ -60,28 +53,27 @@ func (c *Content) Setup() {
 // Main Session struct to hold state
 type Lab struct {
 	Main       string
-	Variables  string
 	Lines      []string
 	MainLine   int
 	ImportLine int
+	InBody     bool
+	Depth      int
+	*History
 }
 
 // Lab Constructor
 func NewLab() *Lab {
 	l := Lab{}
 	l.Main = ".labs/session/lab.go"
-	l.Variables = ".labs/session/vars/"
 	l.Lines, _ = file2lines(".labs/session/lab.go")
-
-	err := os.MkdirAll(l.Variables, 0777)
-	if err != nil {
-		panic(PERMERROR)
-	}
+	l.InBody = false
+	l.Depth = 0
+	l.History = NewHistory()
 
 	var (
 		ich  = make(chan int)
 		mch  = make(chan int)
-		done = EventChan(1)
+		done = make(chan struct{})
 		wg   sync.WaitGroup
 	)
 
@@ -105,7 +97,7 @@ func NewLab() *Lab {
 				return
 			} else if i == len(l.Lines)-1 {
 				wg.Done()
-				done <- event{}
+				done <- struct{}{}
 			}
 		}
 	}()

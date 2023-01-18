@@ -105,7 +105,7 @@ func (sp spbuf) process(i *Input, c Cursor) {
 
 		i.AddLines(1)
 
-		i.done <- event{}
+		i.done <- struct{}{}
 		return
 	case "TAB":
 		if c.GetX() >= i.term.Cols-8 ||
@@ -194,7 +194,7 @@ func (f fbuf) filterInput(i *Input) {
 		go regularChars(i, wg)
 
 		wg.Wait()
-		done <- event{}
+		done <- struct{}{}
 	}()
 
 	select {
@@ -289,7 +289,7 @@ func DebugCheck(i *Input, wg *sync.WaitGroup) {
 	}
 
 	if i.InDebug {
-		i.Debugger.Off <- event{}
+		i.Debugger.Off <- struct{}{}
 		i.Debugger = new(Debugger)
 		i.InDebug = false
 	} else {

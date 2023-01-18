@@ -5,6 +5,7 @@ import(
 )
 
 func main() {
-var a = 1
+var s = "ass"
+fmt.Println(s)
 
 }

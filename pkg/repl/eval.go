@@ -16,25 +16,25 @@ type printSlip struct {
 }
 
 type Evaluator struct {
-	*sync.RWMutex
+	sync.Locker
 	imports *exec.Cmd
 	format  *exec.Cmd
 	run     *exec.Cmd
 	file    string
 }
 
-func NewEvaluator(path string, m *sync.RWMutex) *Evaluator {
+func NewEvaluator(path string) *Evaluator {
 	e := new(Evaluator)
-	e.RWMutex = m
+	e.Locker = new(sync.Mutex)
 	e.file = ".labs/session/eval.go"
 
-	e.RLock()
-	cont, _ := os.ReadFile(path)
-	e.RUnlock()
+	func() {
 
-	e.Lock()
-	_ = os.WriteFile(e.file, cont, 0777)
-	e.Unlock()
+		e.Lock()
+		cont, _ := os.ReadFile(path)
+		_ = os.WriteFile(e.file, cont, 0777)
+		e.Unlock()
+	}()
 
 	e.imports = exec.Command("goimports", "-w", e.file)
 	e.imports.Stdin = os.Stdin
@@ -49,8 +49,9 @@ func NewEvaluator(path string, m *sync.RWMutex) *Evaluator {
 }
 
 func (e *Evaluator) Exec(output chan printSlip) {
-	e.RLock()
-	defer e.RUnlock()
+	e.Lock()
+	defer e.Unlock()
+
 	err := e.imports.Run()
 
 	if err != nil {

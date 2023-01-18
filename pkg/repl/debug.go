@@ -15,7 +15,7 @@ type Debugger struct {
 
 func NewDebugger() *Debugger {
 	d := Debugger{}
-	d.Off = EventChan(1)
+	d.Off = make(chan struct{})
 	d.Ready = make(chan *sync.WaitGroup)
 	d.Stats = new(runtime.MemStats)
 

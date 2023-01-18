@@ -1,4 +1,4 @@
-package repl
+package labs
 
 import (
 	"fmt"
@@ -7,33 +7,32 @@ import (
 	"sync"
 )
 
-func DetermDecl(usr *User, inp string, m sync.Locker) {
+func DetermDecl(lab *Lab, inp string, m sync.Locker) {
 	m.Lock()
 	defer m.Unlock()
 
-	if usr.InBody == true {
-		Body(usr, inp)
+	if lab.InBody == true {
+		Body(lab, inp)
 		return
 	}
 
 	switch {
 	case strings.HasPrefix(inp, "import"):
-		Import(usr.Lab, inp)
+		Import(lab, inp)
 	case strings.HasPrefix(inp, "type"):
-		Type(usr, inp)
+		Type(lab, inp)
 	case strings.HasPrefix(inp, "func"):
-		Func(usr, inp)
+		Func(lab, inp)
 	default:
-		AddToMain(usr, inp)
+		AddToMain(lab, inp)
 	}
 
 }
 
-func AddToMain(usr *User, inp string) {
+func AddToMain(lab *Lab, inp string) {
+	InsertString(lab.Main, inp+"\n", lab.MainLine+lab.count)
 
-	InsertString(usr.Lab.Main, inp+"\n", usr.Lab.MainLine+usr.CmdCount)
-
-	usr.addCmd(inp)
+	lab.AddCmd(inp)
 }
 
 func Import(lab *Lab, s string) {
@@ -50,60 +49,61 @@ func Import(lab *Lab, s string) {
 	lab.MainLine++
 }
 
-func Type(usr *User, s string) {
+func Type(lab *Lab, s string) {
 	trimmed := strings.TrimSpace(strings.Trim(s, "{}type"))
 
 	parts := syntax.TypeParts(trimmed)
 
 	if parts[1] == "struct" || parts[1] == "interface" {
 		dec := fmt.Sprintf("type %s %s {\n", parts[0], parts[1])
-		InsertString(usr.Lab.Main, dec, usr.Lab.MainLine)
+		InsertString(lab.Main, dec, lab.MainLine)
 
-		usr.InBody = true
-		usr.NestDepth += 1
-		usr.Lab.MainLine += 1
+		lab.InBody = true
+		lab.Depth += 1
+		lab.MainLine += 1
 	} else {
 		dec := fmt.Sprintf("type %s %s\n", parts[0], parts[1])
-		InsertString(usr.Lab.Main, dec, usr.Lab.MainLine)
-		usr.Lab.MainLine += 1
+		InsertString(lab.Main, dec, lab.MainLine)
+		lab.MainLine += 1
 	}
+
 }
 
-func Func(usr *User, s string) {
+func Func(lab *Lab, s string) {
 	trimmed := strings.TrimSpace(strings.Trim(s, "{}func"))
 
 	parts := syntax.FuncParts(trimmed)
 
 	decl := fmt.Sprintf("func %s %s%s %s {\n", parts[0], parts[1], parts[2], parts[3])
 
-	InsertString(usr.Lab.Main, decl, usr.Lab.MainLine)
-	usr.Lab.MainLine += 1
-	usr.InBody = true
-	usr.NestDepth += 1
+	InsertString(lab.Main, decl, lab.MainLine)
+	lab.MainLine += 1
+	lab.InBody = true
+	lab.Depth += 1
 }
 
-func Body(usr *User, bodyLine string) {
-	if !usr.InBody {
+func Body(lab *Lab, bodyLine string) {
+	if !lab.InBody {
 		return
 	}
 
 	if strings.Contains(bodyLine, "{") {
-		usr.NestDepth += strings.Count(bodyLine, "{")
+		lab.Depth += strings.Count(bodyLine, "{")
 	}
 
 	if strings.Contains(bodyLine, "}") {
-		usr.NestDepth -= strings.Count(bodyLine, "}")
+		lab.Depth -= strings.Count(bodyLine, "}")
 	}
 
 	var space string
-	for i := 0; i <= usr.NestDepth; i++ {
+	for i := 0; i <= lab.Depth; i++ {
 		space += "    "
 	}
 
-	InsertString(usr.Lab.Main, space+strings.TrimLeft(bodyLine+"\n", " "), usr.Lab.MainLine)
-	usr.Lab.MainLine += 1
+	InsertString(lab.Main, space+strings.TrimLeft(bodyLine+"\n", " "), lab.MainLine)
+	lab.MainLine += 1
 
-	if usr.NestDepth <= 0 {
-		usr.InBody = false
+	if lab.Depth <= 0 {
+		lab.InBody = false
 	}
 }

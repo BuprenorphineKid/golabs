@@ -2,6 +2,7 @@ package repl
 
 import (
 	"labs/pkg/cli"
+	"labs/pkg/labs"
 	"sync"
 )
 
@@ -32,34 +33,23 @@ type Cursor interface {
 // User holds all the main ingredients to run the show that
 // are exvlusive to a user. Think env, files, input/output etc.
 type User struct {
-	CmdCount  int
-	Name      string
-	CmdHist   []string
-	InBody    bool
-	NestDepth int
-	Input     *Input
-	Lab       *Lab
-	Logger    *Log
-	done      chan struct{}
-	FileLock  *sync.RWMutex
+	Name     string
+	Input    *Input
+	Lab      *labs.Lab
+	Logger   *Log
+	done     chan struct{}
+	FileLock sync.Locker
 }
 
 // Creates a new User object and returns a pointer to it.
 func NewUser(t *cli.Terminal) *User {
-	h := make([]string, 1, 150)
 
 	var u User
 
-	u.CmdCount = 1
-	u.CmdHist = h
-	u.CmdHist[0] = "begin"
-
 	u.Input = NewInput(t)
-	u.Lab = NewLab()
+	u.Lab = labs.NewLab()
 
-	u.InBody = false
-	u.NestDepth = 0
-	u.FileLock = new(sync.RWMutex)
+	u.FileLock = new(sync.Mutex)
 
 	return &u
 }
@@ -67,12 +57,6 @@ func NewUser(t *cli.Terminal) *User {
 // Set the Users Name.
 func (u *User) setName(name string) {
 	u.Name = name
-}
-
-// Increment CmdCount and add desired command to Hist.
-func (u *User) addCmd(cmd string) {
-	u.CmdHist = append(u.CmdHist, cmd)
-	u.CmdCount++
 }
 
 // Instantiate objects, Start the main loop, and start up the
@@ -100,7 +84,7 @@ func Run() {
 		select {
 		case vfy := <-outCh:
 			func() {
-				if vfy.ok == false {
+				if !vfy.ok {
 					return
 				}
 
@@ -110,6 +94,16 @@ func Run() {
 	}
 }
 
+// Shortcut to using Display.RenderLine() within the context
+// of the Labs repl, that simply Takes in a *User and a
+// string, modifies *User accordingly, and prints the
+// passed in string after first printing the "output
+// indication prompt."
+//
+// Give() is the counterpart to Take(. For each individual
+// call to the Take() function, user does not hve to
+// make a call to Give() before calling Take() again.
+// Although it is recommended to try to.
 func Give(u *User, s string) {
 	output.SetLine(s)
 	output.devices["main"].(Display).PrintOutPrompt(&u.Input.term.Cursor)
@@ -119,10 +113,19 @@ func Give(u *User, s string) {
 	u.Input.term.Cursor.AddY(2)
 }
 
-// The main loop at the top level.
+// Wraps GetLine() and handles the input accordingly.
+// before returning a channel stream for Post-Evaluation
+// printSlips.
+//
+// Mainly just to save you the hastle  of traversing my nooby
+// unnecisarily complicated type relationships. But if you
+// wish to handle it manually, you can.
+//
+// Take() is to GetLine() what Give() is to
+// Display.RenderLine().
 func Take(usr *User) chan printSlip {
-	if usr.InBody {
-		output.devices["main"].(Display).PrintAndPrompt(&usr.Input.term.Cursor, &usr.Input.lines, usr.NestDepth)
+	if usr.Lab.InBody {
+		output.devices["main"].(Display).PrintAndPrompt(&usr.Input.term.Cursor, &usr.Input.lines, usr.Lab.Depth)
 	} else {
 		output.devices["main"].(Display).PrintInPrompt(&usr.Input.term.Cursor)
 	}
@@ -132,12 +135,16 @@ func Take(usr *User) chan printSlip {
 	DetermCmd(usr, string(*input), usr.FileLock)
 
 	output := make(chan printSlip)
-	e := NewEvaluator(usr.Lab.Main, usr.FileLock)
+	e := NewEvaluator(usr.Lab.Main)
+
 	go e.Exec(output)
 
 	return output
 }
 
+// Most users will be more inclined to use Take() instead
+// because it does the dirty work for you.
+//
 // Start Input Loop that after its done reading input and
 // filling buffers, concurrently processes each.
 func GetLine(i *Input) *line {
@@ -149,7 +156,7 @@ func GetLine(i *Input) *line {
 			dbwg.Wait()
 		}
 
-		i.done = EventChan(1)
+		i.done = make(chan struct{}, 1)
 		i.read()
 
 		var nlwg sync.WaitGroup

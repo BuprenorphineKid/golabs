@@ -3,6 +3,7 @@ package repl
 import (
 	"bufio"
 	"fmt"
+	"labs/pkg/labs"
 	"os"
 	"sync"
 )
@@ -14,7 +15,7 @@ func DetermCmd(usr *User, inp string, m sync.Locker) {
 	case "!help":
 		go Help()
 	default:
-		DetermDecl(usr, inp, m)
+		labs.DetermDecl(usr.Lab, inp, m)
 	}
 
 }
