@@ -19,7 +19,6 @@ type Input struct {
 	Spbuf    spbuf
 	Mvbuf    mvbuf
 	Fbuf     fbuf
-	term     *cli.Terminal
 	lines    []line
 	done     chan struct{}
 	debugOff chan struct{}
@@ -34,13 +33,12 @@ func NewInput(t *cli.Terminal) *Input {
 		reader: os.Stdin,
 	}
 
-	i.term = t
 	i.Rbuf = rbuf("")
 	i.Wbuf = wbuf("")
 	i.Spbuf = spbuf("")
 	i.Mvbuf = mvbuf("")
 	i.Fbuf = fbuf("")
-	i.lines = make([]line, 1, i.term.Lines)
+	i.lines = make([]line, 1, term.Lines)
 	i.Debugger = new(Debugger)
 	i.InDebug = false
 
@@ -60,7 +58,7 @@ func (i *Input) AddLines(n int) {
 // will be read and then its entirety will be sent to the
 // Filter buffer (Fbuf)
 func (i *Input) read() {
-	if i.term.IsRaw != true {
+	if term.IsRaw != true {
 		panic("Not able to enter into raw mode :(.")
 	}
 
@@ -98,5 +96,5 @@ func (i *Input) write(buf []byte) {
 		return
 	}
 
-	i.lines[i.term.Cursor.Y] = i.lines[i.term.Cursor.Y].Insert(buf, i.term.Cursor.X)
+	i.lines[term.Cursor.Y] = i.lines[term.Cursor.Y].Insert(buf, term.Cursor.X)
 }

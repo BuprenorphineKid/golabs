@@ -8,27 +8,6 @@ import (
 
 var term = cli.NewTerminal()
 
-type Cursor interface {
-	MoveTo(int, int)
-	Home(int)
-	End(int)
-	CutRest()
-	AddX(int)
-	AddY(int)
-	SetX(int)
-	SetY(int)
-	GetX() int
-	GetY() int
-	SavePos()
-	RestorePos()
-	Invisible()
-	Normal()
-	Up()
-	Down()
-	Left()
-	Right()
-}
-
 // User Struct for keeping count of Hist CmdCount, yada yada.
 // User holds all the main ingredients to run the show that
 // are exvlusive to a user. Think env, files, input/output etc.
@@ -72,7 +51,7 @@ func Run() {
 
 	lgr := NewLog()
 	usr := NewUser(term)
-	logo(usr.Input, &term.Cursor)
+	logo(usr.Input)
 
 	usr.Logger = lgr
 
@@ -106,11 +85,11 @@ func Run() {
 // Although it is recommended to try to.
 func Give(u *User, s string) {
 	output.SetLine(s)
-	output.devices["main"].(Display).PrintOutPrompt(&u.Input.term.Cursor)
-	output.devices["main"].(Display).RenderLine(&u.Input.term.Cursor)
+	output.devices["main"].(Display).PrintOutPrompt()
+	output.devices["main"].(Display).RenderLine()
 
 	u.Input.AddLines(2)
-	u.Input.term.Cursor.AddY(2)
+	term.Cursor.AddY(2)
 }
 
 // Wraps GetLine() and handles the input accordingly.
@@ -125,9 +104,9 @@ func Give(u *User, s string) {
 // Display.RenderLine().
 func Take(usr *User) chan printSlip {
 	if usr.Lab.InBody {
-		output.devices["main"].(Display).PrintAndPrompt(&usr.Input.term.Cursor, &usr.Input.lines, usr.Lab.Depth)
+		output.devices["main"].(Display).PrintAndPrompt(&usr.Input.lines, usr.Lab.Depth)
 	} else {
-		output.devices["main"].(Display).PrintInPrompt(&usr.Input.term.Cursor)
+		output.devices["main"].(Display).PrintInPrompt()
 	}
 
 	input := GetLine(usr.Input)
@@ -163,16 +142,16 @@ func GetLine(i *Input) *line {
 		nlwg.Add(1)
 
 		var bufs = []buffer{&i.Fbuf, &i.Rbuf, &i.Spbuf, &i.Mvbuf, &i.Wbuf}
-		go ProccessBuffers(bufs, i, &i.term.Cursor, &nlwg)
+		go ProccessBuffers(bufs, i, &nlwg)
 
 		nlwg.Wait()
 
-		output.SetLine(string(i.lines[i.term.Cursor.Y]))
-		output.devices["main"].(Display).RenderLine(&i.term.Cursor)
+		output.SetLine(string(i.lines[term.Cursor.Y]))
+		output.devices["main"].(Display).RenderLine()
 
 		select {
 		case <-i.done:
-			return &i.lines[i.term.Cursor.Y-1]
+			return &i.lines[term.Cursor.Y-1]
 		default:
 			continue
 		}

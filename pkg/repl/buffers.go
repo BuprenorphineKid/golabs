@@ -23,12 +23,12 @@ type wbuf []byte
 
 // Process for wbuf. Actual implementation for writing the content
 // in the wbuf
-func (w wbuf) process(i *Input, c Cursor) {
+func (w wbuf) process(i *Input) {
 	if string(w) == "" {
 		return
 	}
 
-	oldY := c.GetY()
+	oldY := term.Cursor.GetY()
 
 	i.write(w)
 
@@ -36,11 +36,11 @@ func (w wbuf) process(i *Input, c Cursor) {
 	newLines := len(parts) - 1
 
 	for _, v := range parts {
-		c.AddX(len(v))
+		term.Cursor.AddX(len(v))
 	}
 
-	c.AddY(newLines)
-	newY := c.GetY()
+	term.Cursor.AddY(newLines)
+	newY := term.Cursor.GetY()
 
 	if oldY != newY {
 		i.AddLines(newLines)
@@ -52,7 +52,7 @@ func (w wbuf) process(i *Input, c Cursor) {
 type rbuf []byte
 
 // Process for rbuf. Actual implementation for rbuf
-func (r rbuf) process(i *Input, c Cursor) {
+func (r rbuf) process(i *Input) {
 	if string(r) == "" {
 		return
 	}
@@ -65,59 +65,59 @@ type spbuf []byte
 
 // Process for spbuf. Actual implementation for the instructions
 // in the spbuf
-func (sp spbuf) process(i *Input, c Cursor) {
+func (sp spbuf) process(i *Input) {
 	switch string(sp) {
 	case "HOME":
-		c.Home(len(INPROMPT))
-		c.SetX(len(INPROMPT))
+		term.Cursor.Home(len(INPROMPT))
+		term.Cursor.SetX(len(INPROMPT))
 	case "END":
-		c.End(len(i.lines[c.GetY()]) + len(INPROMPT))
-		c.SetX(len(i.lines[c.GetY()]) + len(INPROMPT))
+		term.Cursor.End(len(i.lines[term.Cursor.GetY()]) + len(INPROMPT))
+		term.Cursor.SetX(len(i.lines[term.Cursor.GetY()]) + len(INPROMPT))
 	case "BACK":
-		if c.GetX() <= len(INPROMPT) ||
-			c.GetX()-len(INPROMPT) > len(i.lines[c.GetY()]) {
+		if term.Cursor.GetX() <= len(INPROMPT) ||
+			term.Cursor.GetX()-len(INPROMPT) > len(i.lines[term.Cursor.GetY()]) {
 			return
 		}
 
-		i.lines[c.GetY()] = i.lines[c.GetY()].Backspace(c.GetX())
-		c.AddX(-1)
+		i.lines[term.Cursor.GetY()] = i.lines[term.Cursor.GetY()].Backspace(term.Cursor.GetX())
+		term.Cursor.AddX(-1)
 
-		c.Left()
+		term.Cursor.Left()
 
-		output.SetLine(string(i.lines[c.GetY()]))
-		output.devices["main"].(Display).RenderLine(c)
+		output.SetLine(string(i.lines[term.Cursor.GetY()]))
+		output.devices["main"].(Display).RenderLine()
 
-		c.Left()
+		term.Cursor.Left()
 	case "DEL":
-		if c.GetX() < len(INPROMPT) ||
-			c.GetX()-len(INPROMPT) > len(i.lines[c.GetY()]) {
+		if term.Cursor.GetX() < len(INPROMPT) ||
+			term.Cursor.GetX()-len(INPROMPT) > len(i.lines[term.Cursor.GetY()]) {
 			return
 		}
 
-		i.lines[c.GetY()] = i.lines[c.GetY()].DelChar(c.GetX())
+		i.lines[term.Cursor.GetY()] = i.lines[term.Cursor.GetY()].DelChar(term.Cursor.GetX())
 
-		output.SetLine(string(i.lines[c.GetY()]))
-		output.devices["main"].(Display).RenderLine(c)
+		output.SetLine(string(i.lines[term.Cursor.GetY()]))
+		output.devices["main"].(Display).RenderLine()
 	case "NEWL":
-		c.MoveTo(0, len(i.lines))
-		c.AddY(len(i.lines) - c.GetY())
-		c.SetX(0)
+		term.Cursor.MoveTo(0, len(i.lines))
+		term.Cursor.AddY(len(i.lines) - term.Cursor.GetY())
+		term.Cursor.SetX(0)
 
 		i.AddLines(1)
 
 		i.done <- struct{}{}
 		return
 	case "TAB":
-		if c.GetX() >= i.term.Cols-8 ||
-			c.GetX() < 0 {
+		if term.Cursor.GetX() >= term.Cols-8 ||
+			term.Cursor.GetX() < 0 {
 			return
 		}
 
-		i.lines[c.GetY()] = i.lines[c.GetY()].Tab(c.GetX())
-		c.AddX(4)
+		i.lines[term.Cursor.GetY()] = i.lines[term.Cursor.GetY()].Tab(term.Cursor.GetX())
+		term.Cursor.AddX(4)
 
-		output.SetLine(string(i.lines[c.GetY()]))
-		output.devices["main"].(Display).RenderLine(c)
+		output.SetLine(string(i.lines[term.Cursor.GetY()]))
+		output.devices["main"].(Display).RenderLine()
 	}
 }
 
@@ -126,46 +126,46 @@ type mvbuf []byte
 
 // Process for mvbuf. Actual implementation for the instructions
 // in the mvbuf
-func (mv mvbuf) process(i *Input, c Cursor) {
+func (mv mvbuf) process(i *Input) {
 	switch string(mv) {
 	case "UP":
-		if c.GetY() <= 5 {
+		if term.Cursor.GetY() <= 5 {
 			return
 		}
 
-		c.Up()
-		c.AddY(-1)
+		term.Cursor.Up()
+		term.Cursor.AddY(-1)
 
-		if c.GetX() > len(i.lines[c.GetY()])+len(INPROMPT) {
-			c.MoveTo(len(i.lines[c.GetY()])+len(INPROMPT), c.GetY())
-			c.SetX(len(i.lines[c.GetY()]) + len(INPROMPT))
+		if term.Cursor.GetX() > len(i.lines[term.Cursor.GetY()])+len(INPROMPT) {
+			term.Cursor.MoveTo(len(i.lines[term.Cursor.GetY()])+len(INPROMPT), term.Cursor.GetY())
+			term.Cursor.SetX(len(i.lines[term.Cursor.GetY()]) + len(INPROMPT))
 		}
 	case "DOWN":
-		if c.GetY() >= len(i.lines)-1 {
+		if term.Cursor.GetY() >= len(i.lines)-1 {
 			return
 		}
 
-		c.Down()
-		c.AddY(1)
+		term.Cursor.Down()
+		term.Cursor.AddY(1)
 
-		if c.GetX() > len(i.lines[c.GetY()])+len(INPROMPT) {
-			c.MoveTo(len(i.lines[c.GetY()])+len(INPROMPT), c.GetY())
-			c.SetX(len(i.lines[c.GetY()]) + len(INPROMPT))
+		if term.Cursor.GetX() > len(i.lines[term.Cursor.GetY()])+len(INPROMPT) {
+			term.Cursor.MoveTo(len(i.lines[term.Cursor.GetY()])+len(INPROMPT), term.Cursor.GetY())
+			term.Cursor.SetX(len(i.lines[term.Cursor.GetY()]) + len(INPROMPT))
 		}
 	case "RIGHT":
-		if c.GetX() >= len(INPROMPT)+len(i.lines[c.GetY()]) {
+		if term.Cursor.GetX() >= len(INPROMPT)+len(i.lines[term.Cursor.GetY()]) {
 			return
 		}
 
-		c.Right()
-		c.AddX(1)
+		term.Cursor.Right()
+		term.Cursor.AddX(1)
 	case "LEFT":
-		if c.GetX() <= len(INPROMPT) {
+		if term.Cursor.GetX() <= len(INPROMPT) {
 			return
 		}
 
-		c.Left()
-		c.AddX(-1)
+		term.Cursor.Left()
+		term.Cursor.AddX(-1)
 	}
 }
 
@@ -174,7 +174,7 @@ func (mv mvbuf) process(i *Input, c Cursor) {
 type fbuf []byte
 
 // Process for fbuf.
-func (f fbuf) process(i *Input, c Cursor) {
+func (f fbuf) process(i *Input) {
 	f.filterInput(i)
 }
 
@@ -276,7 +276,7 @@ func killCheck(i *Input, wg *sync.WaitGroup) {
 		return
 	}
 
-	i.term.Normal()
+	term.Normal()
 	cli.Restore()
 	os.Exit(3)
 }
@@ -326,15 +326,15 @@ func regularChars(i *Input, wg *sync.WaitGroup) {
 
 // Used for referring to all buffers as one entity.
 type buffer interface {
-	process(*Input, Cursor)
+	process(*Input)
 }
 
 // Process a slice of buffers and resetting their value back to
 // empty, individually.
-func ProccessBuffers(bufs []buffer, i *Input, c Cursor, wg *sync.WaitGroup) {
+func ProccessBuffers(bufs []buffer, i *Input, wg *sync.WaitGroup) {
 
 	for _, v := range bufs {
-		v.process(i, c)
+		v.process(i)
 
 		reflect.ValueOf(v).Elem().SetBytes(
 			[]byte(""),

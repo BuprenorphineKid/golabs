@@ -38,105 +38,105 @@ func (d *Debugger) DebugMode(i *Input) {
 }
 
 func (d *Debugger) CleanUp(i *Input) {
-	x := i.term.Cols / 3
-	y := i.term.Lines / 3
+	x := term.Cols / 3
+	y := term.Lines / 3
 
-	i.term.Cursor.SavePos()
-	i.term.Cursor.Invisible()
+	term.Cursor.SavePos()
+	term.Cursor.Invisible()
 
-	old := i.term.Cursor.Y
+	old := term.Cursor.Y
 
-	i.term.Cursor.MoveTo(x+x, 1)
-	i.term.Cursor.CutRest()
+	term.Cursor.MoveTo(x+x, 1)
+	term.Cursor.CutRest()
 
-	i.term.Cursor.MoveTo(x+x, 2)
-	i.term.Cursor.CutRest()
+	term.Cursor.MoveTo(x+x, 2)
+	term.Cursor.CutRest()
 
-	i.term.Cursor.MoveTo(x+x, 3)
-	i.term.Cursor.CutRest()
-	i.term.Cursor.Y = 3
+	term.Cursor.MoveTo(x+x, 3)
+	term.Cursor.CutRest()
+	term.Cursor.Y = 3
 
 	for range i.lines[5:] {
-		i.term.Cursor.CutRest()
-		i.term.Cursor.MoveTo(x+x, i.term.Cursor.Y+1)
-		i.term.Cursor.AddY(1)
+		term.Cursor.CutRest()
+		term.Cursor.MoveTo(x+x, term.Cursor.Y+1)
+		term.Cursor.AddY(1)
 	}
 
-	i.term.Cursor.MoveTo(x+x, y-1)
-	i.term.Cursor.CutRest()
+	term.Cursor.MoveTo(x+x, y-1)
+	term.Cursor.CutRest()
 
 	for j := range reflect.VisibleFields(reflect.TypeOf(d.Stats).Elem()) {
-		i.term.Cursor.MoveTo(x+x, y+j)
-		i.term.Cursor.CutRest()
+		term.Cursor.MoveTo(x+x, y+j)
+		term.Cursor.CutRest()
 	}
 
-	i.term.Cursor.RestorePos()
-	i.term.Cursor.Y = old
-	i.term.Cursor.Normal()
+	term.Cursor.RestorePos()
+	term.Cursor.Y = old
+	term.Cursor.Normal()
 }
 
 func (d *Debugger) PosAndLines(i *Input) {
-	x := i.term.Cols / 3
+	x := term.Cols / 3
 
-	i.term.Cursor.SavePos()
-	i.term.Cursor.Invisible()
+	term.Cursor.SavePos()
+	term.Cursor.Invisible()
 
-	old := i.term.Cursor.Y
+	old := term.Cursor.Y
 
-	i.term.Cursor.MoveTo(x+x, 1)
-	i.term.Cursor.CutRest()
+	term.Cursor.MoveTo(x+x, 1)
+	term.Cursor.CutRest()
 
 	fmt.Printf("POS - |X: %d| |Y: %d|",
-		i.term.Cursor.X,
-		i.term.Cursor.Y,
+		term.Cursor.X,
+		term.Cursor.Y,
 	)
 
-	i.term.Cursor.MoveTo(x+x, 2)
-	i.term.Cursor.CutRest()
+	term.Cursor.MoveTo(x+x, 2)
+	term.Cursor.CutRest()
 
 	fmt.Printf("LINES - |count: %d|",
 		len(i.lines),
 	)
 
-	i.term.Cursor.MoveTo(x+x, 3)
-	i.term.Cursor.CutRest()
-	i.term.Cursor.Y = 3
+	term.Cursor.MoveTo(x+x, 3)
+	term.Cursor.CutRest()
+	term.Cursor.Y = 3
 
 	for n, v := range i.lines[5:] {
-		i.term.Cursor.CutRest()
+		term.Cursor.CutRest()
 		fmt.Printf("%d - |%s|\n", n, string(v))
-		i.term.Cursor.MoveTo(x+x, i.term.Cursor.Y+1)
-		i.term.Cursor.AddY(1)
-		i.term.Cursor.Normal()
+		term.Cursor.MoveTo(x+x, term.Cursor.Y+1)
+		term.Cursor.AddY(1)
+		term.Cursor.Normal()
 	}
 
-	i.term.Cursor.RestorePos()
-	i.term.Cursor.Y = old
-	i.term.Cursor.Normal()
+	term.Cursor.RestorePos()
+	term.Cursor.Y = old
+	term.Cursor.Normal()
 
 }
 
 func (d *Debugger) MemStats(i *Input) {
 	runtime.ReadMemStats(d.Stats)
 
-	x := i.term.Cols / 3
-	y := i.term.Lines / 3
+	x := term.Cols / 3
+	y := term.Lines / 3
 
-	i.term.Cursor.SavePos()
-	i.term.Cursor.Invisible()
+	term.Cursor.SavePos()
+	term.Cursor.Invisible()
 
-	i.term.Cursor.MoveTo(x+x, y-1)
+	term.Cursor.MoveTo(x+x, y-1)
 	fmt.Print("|[MEMORY]|")
 
 	for j, v := range reflect.VisibleFields(reflect.TypeOf(d.Stats).Elem()) {
-		i.term.Cursor.MoveTo(x+x, y+j)
-		i.term.Cursor.CutRest()
+		term.Cursor.MoveTo(x+x, y+j)
+		term.Cursor.CutRest()
 		fmt.Printf("|[%s: %d]|", v.Name, reflect.ValueOf(d.Stats).Elem().FieldByIndex(v.Index))
 		if j == 22 {
 			break
 		}
 	}
 
-	i.term.Cursor.RestorePos()
-	i.term.Cursor.Normal()
+	term.Cursor.RestorePos()
+	term.Cursor.Normal()
 }

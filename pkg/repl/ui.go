@@ -16,10 +16,10 @@ const (
 	COUTPROMPT = "\033[35;9;1m<<\033[0m "
 )
 
-func logo(i *Input, c Cursor) {
+func logo(i *Input) {
 	print(CLOGO)
 
-	c.AddY(len(strings.Split(LOGO, "\n\r")) + 1)
+	term.Cursor.AddY(len(strings.Split(LOGO, "\n\r")) + 1)
 	i.AddLines(len(strings.Split(LOGO, "\n\r")) + 1)
 }
 

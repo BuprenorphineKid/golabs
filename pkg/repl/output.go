@@ -67,11 +67,11 @@ type Device interface {
 
 // Displayable device
 type Display interface {
-	RenderLine(Cursor)
+	RenderLine()
 	PrintBuffer()
-	PrintInPrompt(Cursor)
-	PrintOutPrompt(Cursor)
-	PrintAndPrompt(Cursor, *[]line, int)
+	PrintInPrompt()
+	PrintOutPrompt()
+	PrintAndPrompt(*[]line, int)
 }
 
 // Default output device, could be whatever, like a log.
@@ -103,58 +103,58 @@ func (s *Screen) PrintBuffer() {
 // Moves cursor to beginning of line, cuts to the end and prints out
 // current Line buffer, this is to update/redraw the lines as theyre being
 // typed.
-func (s *Screen) RenderLine(c Cursor) {
-	c.Invisible()
-	c.MoveTo(len(INPROMPT), c.GetY())
-	c.CutRest()
+func (s *Screen) RenderLine() {
+	term.Cursor.Invisible()
+	term.Cursor.MoveTo(len(INPROMPT), term.Cursor.GetY())
+	term.Cursor.CutRest()
 	s.PrintBuffer()
 
-	c.MoveTo(c.GetX(), c.GetY())
-	c.Normal()
+	term.Cursor.MoveTo(term.Cursor.GetX(), term.Cursor.GetY())
+	term.Cursor.Normal()
 }
 
 // Move Cursor to true beginning of current line, and prints the Colored
 // INPROMPT (CINPROMPT) constant.
-func (s *Screen) PrintInPrompt(c Cursor) {
-	c.Invisible()
+func (s *Screen) PrintInPrompt() {
+	term.Cursor.Invisible()
 
-	c.MoveTo(0, c.GetY())
+	term.Cursor.MoveTo(0, term.Cursor.GetY())
 	fmt.Print(CINPROMPT)
-	c.SetX(len(INPROMPT))
+	term.Cursor.SetX(len(INPROMPT))
 
-	c.Normal()
+	term.Cursor.Normal()
 }
 
 // Move Cursor to relative beginning of curent line, then prints thd Colored
 // AND PROMPT (CANDPROMPT) constant.
-func (s *Screen) PrintAndPrompt(c Cursor, ln *[]line, depth int) {
-	c.Invisible()
+func (s *Screen) PrintAndPrompt(ln *[]line, depth int) {
+	term.Cursor.Invisible()
 
 	l := *ln
 
-	c.MoveTo(len(INPROMPT)-len(ANDPROMPT), c.GetY())
+	term.Cursor.MoveTo(len(INPROMPT)-len(ANDPROMPT), term.Cursor.GetY())
 	fmt.Print(CANDPROMPT)
-	c.MoveTo(len(INPROMPT), c.GetY())
-	c.SetX(len(INPROMPT))
+	term.Cursor.MoveTo(len(INPROMPT), term.Cursor.GetY())
+	term.Cursor.SetX(len(INPROMPT))
 
 	for j := 0; j < depth; j++ {
-		l[c.GetY()] = l[c.GetY()].Tab(c.GetX())
+		l[term.Cursor.GetY()] = l[term.Cursor.GetY()].Tab(term.Cursor.GetX())
 		Tab()
 
-		c.AddX(4)
-		s.RenderLine(c)
+		term.Cursor.AddX(4)
+		s.RenderLine()
 	}
 
-	c.Normal()
+	term.Cursor.Normal()
 }
 
-func (s *Screen) PrintOutPrompt(c Cursor) {
-	c.Invisible()
+func (s *Screen) PrintOutPrompt() {
+	term.Cursor.Invisible()
 
-	c.MoveTo(len(INPROMPT)-len(OUTPROMPT), c.GetY())
+	term.Cursor.MoveTo(len(INPROMPT)-len(OUTPROMPT), term.Cursor.GetY())
 	fmt.Print(COUTPROMPT)
-	c.MoveTo(len(INPROMPT), c.GetY())
-	c.SetX(len(INPROMPT))
+	term.Cursor.MoveTo(len(INPROMPT), term.Cursor.GetY())
+	term.Cursor.SetX(len(INPROMPT))
 
-	c.Normal()
+	term.Cursor.Normal()
 }
