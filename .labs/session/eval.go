@@ -1,7 +1,12 @@
 package main
 
 func main() {
-	var a = "ass"
-	print(a)
+	g
+	g := q
+
+	q := "ass"
+
+	q := "ass"
+	q = "arse"
 
 }

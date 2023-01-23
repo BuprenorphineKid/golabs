@@ -2,6 +2,7 @@ package repl
 
 import (
 	"fmt"
+	"labs/pkg/cli"
 	"log"
 	"os"
 	"os/exec"
@@ -59,7 +60,10 @@ func (e *Evaluator) Exec(output chan printSlip) {
 		err := e.format.Run()
 
 		if err != nil {
-			log.Fatal(err)
+			term.Normal()
+			cli.Restore()
+
+			log.Fatalf("\n\r|%s|\n\r%v", "Evaluator.Exec()", err)
 		}
 
 		e.format.Wait()

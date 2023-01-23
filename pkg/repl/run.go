@@ -3,6 +3,7 @@ package repl
 import (
 	"labs/pkg/cli"
 	"labs/pkg/labs"
+	"labs/pkg/scripts"
 	"sync"
 )
 
@@ -57,6 +58,11 @@ func Run() {
 
 	output.Register("main", newScreen())
 
+	scripter := scripts.NewHandler()
+	scripter.Run()
+
+	bash := scripts.NewLanguage("bash")
+
 	for {
 		outCh := Take(usr)
 
@@ -70,6 +76,8 @@ func Run() {
 				Give(usr, vfy.results)
 			}()
 		}
+
+		scripter.Do <- scripts.Exec(bash, "scripts/remove_print.sh")
 	}
 }
 

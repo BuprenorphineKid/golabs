@@ -171,7 +171,7 @@ func newHiLiter() *HiLiter {
 //}
 
 func (s *HiLiter) Shade(str string) string {
-	var b string = str
+	var b = str
 
 	for _, def := range s.List {
 		b = strings.ReplaceAll(b, def, s.keyWords[def])
