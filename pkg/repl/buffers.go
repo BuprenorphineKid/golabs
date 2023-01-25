@@ -278,7 +278,7 @@ func killCheck(i *Input, wg *sync.WaitGroup) {
 
 	term.Normal()
 	cli.Restore()
-	os.Exit(3)
+	os.Exit(0)
 }
 
 // Filter through input byte for "Debug" KeyStroke: Ctrl-B.

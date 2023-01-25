@@ -59,14 +59,13 @@ func Type(lab *Lab, s string) {
 		InsertString(lab.Main, dec, lab.MainLine)
 
 		lab.InBody = true
-		lab.Depth += 1
-		lab.MainLine += 1
+		lab.Depth++
+		lab.MainLine++
 	} else {
-		dec := fmt.Sprintf("type %s %s\n", parts[0], parts[1])
+		dec := fmt.Sprintf("type %s %s{}\n", parts[0], parts[1])
 		InsertString(lab.Main, dec, lab.MainLine)
-		lab.MainLine += 1
+		lab.MainLine++
 	}
-
 }
 
 func Func(lab *Lab, s string) {
@@ -77,9 +76,9 @@ func Func(lab *Lab, s string) {
 	decl := fmt.Sprintf("func %s %s%s %s {\n", parts[0], parts[1], parts[2], parts[3])
 
 	InsertString(lab.Main, decl, lab.MainLine)
-	lab.MainLine += 1
+	lab.MainLine++
 	lab.InBody = true
-	lab.Depth += 1
+	lab.Depth++
 }
 
 func Body(lab *Lab, bodyLine string) {
@@ -101,7 +100,7 @@ func Body(lab *Lab, bodyLine string) {
 	}
 
 	InsertString(lab.Main, space+strings.TrimLeft(bodyLine+"\n", " "), lab.MainLine)
-	lab.MainLine += 1
+	lab.MainLine++
 
 	if lab.Depth <= 0 {
 		lab.InBody = false

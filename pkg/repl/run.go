@@ -7,6 +7,7 @@ import (
 	"sync"
 )
 
+// Singleton of Terminal.
 var term = cli.NewTerminal()
 
 // User Struct for keeping count of Hist CmdCount, yada yada.
@@ -16,14 +17,12 @@ type User struct {
 	Name     string
 	Input    *Input
 	Lab      *labs.Lab
-	Logger   *Log
 	done     chan struct{}
 	FileLock sync.Locker
 }
 
 // Creates a new User object and returns a pointer to it.
 func NewUser(t *cli.Terminal) *User {
-
 	var u User
 
 	u.Input = NewInput(t)
@@ -50,11 +49,8 @@ func Run() {
 	term.RawMode()
 	defer term.Normal()
 
-	lgr := NewLog()
 	usr := NewUser(term)
 	logo(usr.Input)
-
-	usr.Logger = lgr
 
 	output.Register("main", newScreen())
 
@@ -64,17 +60,19 @@ func Run() {
 	bash := scripts.NewLanguage("bash")
 
 	for {
-		outCh := Take(usr)
+		evalCh := make(chan struct{})
+		outCh := TakeInput(usr)
 
 		select {
-		case vfy := <-outCh:
-			func() {
-				if !vfy.ok {
-					return
-				}
+		case eval := <-outCh:
+			if !eval.ok {
+				return
+			}
 
-				Give(usr, vfy.results)
-			}()
+			GiveOutput(usr, eval.results)
+			scripter.Do <- scripts.Exec(bash, "scripts/extract_vars.sh")
+		case <-evalCh:
+
 		}
 
 		scripter.Do <- scripts.Exec(bash, "scripts/remove_print.sh")
@@ -87,11 +85,11 @@ func Run() {
 // passed in string after first printing the "output
 // indication prompt."
 //
-// Give() is the counterpart to Take(. For each individual
+// GiveOutput() is the counterpart to Take(. For each individual
 // call to the Take() function, user does not hve to
-// make a call to Give() before calling Take() again.
+// make a call to GiveOutput() before calling Take() again.
 // Although it is recommended to try to.
-func Give(u *User, s string) {
+func GiveOutput(u *User, s string) {
 	output.SetLine(s)
 	output.devices["main"].(Display).PrintOutPrompt()
 	output.devices["main"].(Display).RenderLine()
@@ -108,9 +106,9 @@ func Give(u *User, s string) {
 // unnecisarily complicated type relationships. But if you
 // wish to handle it manually, you can.
 //
-// Take() is to GetLine() what Give() is to
+// TakeInput() is to GetLine() what Give() is to
 // Display.RenderLine().
-func Take(usr *User) chan printSlip {
+func TakeInput(usr *User) chan report {
 	if usr.Lab.InBody {
 		output.devices["main"].(Display).PrintAndPrompt(&usr.Input.lines, usr.Lab.Depth)
 	} else {
@@ -121,7 +119,7 @@ func Take(usr *User) chan printSlip {
 
 	DetermCmd(usr, string(*input), usr.FileLock)
 
-	output := make(chan printSlip)
+	output := make(chan report)
 	e := NewEvaluator(usr.Lab.Main)
 
 	go e.Exec(output)

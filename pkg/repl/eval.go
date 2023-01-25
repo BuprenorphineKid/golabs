@@ -11,7 +11,7 @@ import (
 	"sync"
 )
 
-type printSlip struct {
+type report struct {
 	ok      bool
 	results string
 }
@@ -49,17 +49,24 @@ func NewEvaluator(path string) *Evaluator {
 	return e
 }
 
-func (e *Evaluator) Exec(output chan printSlip) {
+func (e *Evaluator) Exec(output chan report) {
 	e.Lock()
 	defer e.Unlock()
 
 	err := e.imports.Run()
-
 	if err != nil {
+		if strings.Contains(err.Error(), "2") {
+			output <- report{results: "", ok: false}
+			return
+		}
 
 		err := e.format.Run()
-
 		if err != nil {
+			if strings.Contains(err.Error(), "2") {
+				output <- report{results: "", ok: false}
+				return
+			}
+
 			term.Normal()
 			cli.Restore()
 
@@ -81,14 +88,14 @@ func (e *Evaluator) Exec(output chan printSlip) {
 		f := re.ReplaceAll(res, replacement)
 
 		if strings.Contains(string(f), "not used") {
-			output <- printSlip{results: "", ok: false}
+			output <- report{results: "", ok: false}
 		}
 
-		output <- printSlip{results: fmt.Sprintf("Err: %v", strings.TrimSpace(string(f))), ok: true}
+		output <- report{results: fmt.Sprintf("Err: %v", strings.TrimSpace(string(f))), ok: true}
 
 		return
 	}
 
-	output <- printSlip{results: string(res), ok: true}
+	output <- report{results: string(res), ok: true}
 
 }

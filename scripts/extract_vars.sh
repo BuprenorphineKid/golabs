@@ -5,6 +5,7 @@ dir=$(dirname $0)
 varfile="$dir/../.labs/session/vars"
 eval="$dir/../.labs/session/eval.go"
 
+rm -f $varfile
 touch $varfile
 
 function extract() {
@@ -13,8 +14,14 @@ function extract() {
 	inf=$(echo "$@" | grep ":=" | sed s/"^\s*"//g | sed s/"$"/"\n"/g)
 
 
-	echo "$var" >> $varfile
-	echo "$inf" >> $varfile
+	if [[ $var != "" ]]
+	then
+		echo "$var" | sed s/^\s*\B//g >> $varfile
+	fi
+	if [[ $inf != "" ]]
+	then
+		echo "$inf" | sed s/^\s*\B//g >> $varfile
+	fi
 
 }
 

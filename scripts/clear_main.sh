@@ -14,26 +14,51 @@ then
 fi
 
 i=1
+start=0
+end=0
+
+nest=false
 while IFS= read -r line
 do
 	if [[ $line == "func main() {" ]]
 	then
-		start=$i
+		start=$(($i + 1))
+		continue
 	fi
 
-	if [[ $start != 0 ]] && [[ $line == "}" ]]
+	if [[ $line =~ "{" ]]
 	then
-		end=$i
+		nest=true
+	fi
+
+	if $nest && [[ $line == "}" ]]
+	then
+		nest=false
+		continue
+	fi
+
+	if [[ $nest == false ]] && [[ $start != 0 ]] && [[ $line == "}" ]]
+	then
+		end=$(($i - 1))
 		break
 	fi
 
 	i=$(($i + 1))
 
 done < $session
+if [[ $start == 0 ]] && [[ $end == 0 ]]
+then
+	return 0
+fi
 
 cp $session $copy
 
-sed -i $start,$end"s/^\s*\(fmt\)\?\.\?[Pp]rint.*$//g" $copy
+if ((start < end))
+then
+	sed -i $start,$end"d" $copy
+fi
+
+sed -i $start"i\ " $copy
 
 rm $session
 
