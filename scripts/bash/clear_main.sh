@@ -25,7 +25,7 @@ do
 		continue
 	fi
 
-	if [[ $line =~ "{" ]]
+	if [[ $line =~ "{" ]] && [[ $start != 0 ]]
 	then
 		nest=true
 	fi

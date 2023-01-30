@@ -2,6 +2,7 @@ package repl
 
 import (
 	"labs/pkg/cli"
+	"labs/pkg/labs"
 	"labs/pkg/scripts"
 	"labs/pkg/syntax"
 	"sync"
@@ -24,11 +25,10 @@ func Run() {
 	logo(usr.Input)
 
 	output.Register("main", newScreen())
+	scripter := scripts.NewHandler()
+	scripter.Run()
 
 	go func() {
-		scripter := scripts.NewHandler()
-		scripter.Run()
-
 		for {
 			TakeInput(usr)
 
@@ -50,20 +50,14 @@ func Run() {
 	}()
 
 	func() {
-		scripter := scripts.NewHandler()
-		scripter.Run()
-
 		for {
-			if usr.Lab.History.Last == nil {
-				continue
-			}
-
-			if syntax.IsFuncCall(*usr.Lab.History.Last) {
+			for usr.Lab.History.Last != nil && syntax.IsFuncCall(*usr.Lab.History.Last) {
 				scripter.Do <- scripts.Exec(scripts.NewLanguage("bash"), "scripts/bash/clear_main.sh")
-
+				usr.Lab.History = labs.NewHistory()
 			}
 		}
 	}()
+
 }
 
 // Shortcut to using Display.RenderLine() within the context

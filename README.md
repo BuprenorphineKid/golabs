@@ -14,10 +14,10 @@ patient with me.
 
 # The Premise
 
-Up until now, theres not really been any good command line solutions 
+Up until now, theres not really been any good command line solutions
 for messing around with the Go language. Let's face it, other than
 just flat out writing an entire module/project, or at the very least
-a little script which when youre just testing out a few functions 
+a little script which when youre just testing out a few functions
 or a couple new design ideas, theres a good bit of boilerplate involved.
 Golabs sets out to accomplish a few things promised by other Golang
 REPL/shells, but this time, actually delivering. Dont get me wrong the
@@ -41,27 +41,17 @@ $GOPATH so long as its also in your $PATH.
 
 # Installation
 
-git clone the repo. move into the downloaded directory then run
-'go build .', after that there should be a binary called labs. run
-it with ./labs. or optionally just do 'go run main.go' as the project
-is far from conplete. this section will be updated when the project gets
-closer to being somewhere i could call packagable.
+git clone this repo. with 'git clone https://github.com/BuprenorphineKid/GoLabs'
+move into the downloaded directory then run 'go build cmd/labs/main.go',
+after that there should be a binary called labs. run it with ./labs. 
 
 TODO:
-
-	|syntax package *color*
 
 	more debugging options
 
 	add menus and other options
 	
 	more robust help command
-
-	|redesign evaluation command.
-
-	|fix only one evaluation per session issue
-
-	|<fix tab butto>|
 	
 	|implement autotab support
 

@@ -1,11 +1,12 @@
 package main
 
-import(
+import "fmt"
 
-)
-
-func  def(s string)  {
+func v() {
+}
 func main() {
- 
-c := fmt.Sprintf("%s%s", b, a)
+	b := 56
+	a := 12
+	fmt.Println(b + a)
+
 }

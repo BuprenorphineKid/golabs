@@ -2,7 +2,7 @@ package labs
 
 type History struct {
 	count   int
-	entries []string
+	Entries []string
 	Last    *string
 }
 
@@ -10,14 +10,14 @@ type History struct {
 func NewHistory() *History {
 	h := new(History)
 	h.count = 1
-	h.entries = []string{}
+	h.Entries = []string{}
 
 	return h
 }
 
 // Increment CmdCount and add desired command to Hist.
 func (h *History) AddCmd(cmd string) {
-	h.entries = append(h.entries, cmd)
+	h.Entries = append(h.Entries, cmd)
 	h.count++
-	h.Last = &h.entries[len(h.entries)-1]
+	h.Last = &h.Entries[len(h.Entries)-1]
 }
