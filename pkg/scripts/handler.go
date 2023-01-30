@@ -28,8 +28,10 @@
 package scripts
 
 import (
+	"labs/pkg/cli"
 	"log"
 	"os/exec"
+	"runtime/debug"
 )
 
 // The Handler type is a struct that.. well, handles your
@@ -63,7 +65,13 @@ func (s *Handler) Run() {
 			case f := <-s.Do:
 				err := f()
 				if err != nil {
-					log.Fatalf("\n\r|%s|\n\r%v", "Handler.Run() #"+f().Error(), err)
+					cli.Restore()
+					log.Fatalf(
+						"\n\rfunc: |%s|\n\rerr: |%v|\n\r stack: |%s|\n\r",
+						"Handler.Run() #"+f().Error(),
+						err,
+						debug.Stack(),
+					)
 				}
 			default:
 			}
@@ -96,9 +104,9 @@ func NewLanguage(lang string) Language {
 // script youd like to execute, and you will be returned a
 // |func() error| that once called, will actually execute
 // your script at the path you supplied.
-func Exec(lang Language, path string) func() error {
+func Exec(lang Language, script string) func() error {
 	return func() error {
-		lang.CallCmd.Args = append(lang.CallCmd.Args, path)
+		lang.CallCmd.Args = append(lang.CallCmd.Args, script)
 
 		err := lang.CallCmd.Run()
 		if err != nil {

@@ -52,11 +52,11 @@ func (i *Input) AddLines(n int) {
 	i.lines = append(i.lines, newlines...)
 }
 
-// the read method is used for recieving one byte of input at a
+// The read method is used for recieving one byte of input at a
 // time and appending it to the Filter buffer(Fbuf) unless
 // it recieves an escape byte, in which case 2 more bytes
 // will be read and then its entirety will be sent to the
-// Filter buffer (Fbuf)
+// Filter buffer (Fbuf).
 func (i *Input) read() {
 	if term.IsRaw != true {
 		panic("Not able to enter into raw mode :(.")
@@ -89,8 +89,8 @@ func (i *Input) read() {
 	}
 }
 
-// the write method is used to simultaneously write to the screen
-// and to the current line.
+// The write method is used to write to the current line
+// so that it can be processed by the output system.
 func (i *Input) write(buf []byte) {
 	if string(buf) == "" {
 		return

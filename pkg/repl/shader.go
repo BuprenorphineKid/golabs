@@ -93,7 +93,7 @@ func newHiLiter() *HiLiter {
 		"struct",
 		"interface",
 		"chan",
-		"strings",
+		"string",
 		"int",
 		"byte",
 		"rune",

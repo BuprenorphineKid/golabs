@@ -5,7 +5,6 @@ dir=$(dirname $0)
 
 tmp="$dir/../.labs/template"
 session="$dir/../.labs/session/lab.go"
-copy="$dir/../.labs/session/lab_copy.go"
 
 if [[ ! -e $tmp ]]
 then
@@ -51,15 +50,9 @@ then
 	return 0
 fi
 
-cp $session $copy
-
-if ((start < end))
+if (($start < $end))
 then
-	sed -i $start,$end"d" $copy
+	sed -i $start,$end"d" $session
 fi
 
-sed -i $start"i\ " $copy
-
-rm $session
-
-mv $copy $session
+sed -i $start"i\ " $session

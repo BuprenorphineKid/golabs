@@ -1,6 +1,7 @@
 package syntax
 
 import (
+	"log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -70,4 +71,55 @@ func Ints(s string) []string {
 	}
 
 	return i
+}
+
+func IsFuncCall(s string) bool {
+	if !strings.Contains(s, "(") && !strings.Contains(s, ")") {
+		return false
+	}
+
+	match, err := regexp.MatchString(
+		`\s*\b([A-Za-z]+[A-Za-z0-9_]*?\b)?\.?[A-Za-z]+[A-Za-z0-9_]*\b\(.*\)`,
+		s,
+	)
+	if err != nil {
+		log.Fatalf(
+			"syntax.IsFuncCall()\n\rErr: %v\n\r",
+			err,
+		)
+	}
+
+	if !match {
+		return false
+	}
+
+	types := []string{
+		"string",
+		"[]string",
+		"bool",
+		"[]byte",
+		"byte",
+		"rune",
+		"[]rune",
+		"uint",
+		"uint8",
+		"uint16",
+		"uint32",
+		"uint64",
+		"int",
+		"int8",
+		"int16",
+		"int32",
+		"int64",
+		"uintptr",
+		"struct{}",
+	}
+
+	for i := range types {
+		if strings.HasPrefix(strings.TrimSpace(s), types[i]) {
+			return false
+		}
+	}
+
+	return true
 }

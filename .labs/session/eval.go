@@ -1,51 +1,6 @@
 package main
 
-import(
-
-)
-
-func    {
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    }
 func main() {
-
-
-
-
-
-
-{
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	println("ass")
 
 }

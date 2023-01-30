@@ -2,45 +2,16 @@ package repl
 
 import (
 	"labs/pkg/cli"
-	"labs/pkg/labs"
 	"labs/pkg/scripts"
+	"labs/pkg/syntax"
 	"sync"
 )
 
 // Singleton of Terminal.
 var term = cli.NewTerminal()
 
-// User Struct for keeping count of Hist CmdCount, yada yada.
-// User holds all the main ingredients to run the show that
-// are exvlusive to a user. Think env, files, input/output etc.
-type User struct {
-	Name     string
-	Input    *Input
-	Lab      *labs.Lab
-	done     chan struct{}
-	FileLock sync.Locker
-}
-
-// Creates a new User object and returns a pointer to it.
-func NewUser(t *cli.Terminal) *User {
-	var u User
-
-	u.Input = NewInput(t)
-	u.Lab = labs.NewLab()
-
-	u.FileLock = new(sync.Mutex)
-
-	return &u
-}
-
-// Set the Users Name.
-func (u *User) setName(name string) {
-	u.Name = name
-}
-
-// Instantiate objects, Start the main loop, and start up the
-// Evaluation Controller. This is the function you use to
-// start the application
+// Instantiate objects, Start the main loop. This is the function
+// you use to start the application.
 func Run() {
 	cli.Ready()
 	defer cli.Restore()
@@ -54,29 +25,45 @@ func Run() {
 
 	output.Register("main", newScreen())
 
-	scripter := scripts.NewHandler()
-	scripter.Run()
+	go func() {
+		scripter := scripts.NewHandler()
+		scripter.Run()
 
-	bash := scripts.NewLanguage("bash")
+		for {
+			TakeInput(usr)
 
-	for {
-		evalCh := make(chan struct{})
-		outCh := TakeInput(usr)
+			eval := NewEvaluator(usr.Lab.Main)
+			rCh := make(chan report)
+			go eval.Exec(rCh)
 
-		select {
-		case eval := <-outCh:
-			if !eval.ok {
-				return
+			select {
+			case info := <-rCh:
+				if !info.ok {
+					break
+				}
+
+				GiveOutput(usr, info.results)
+
+				scripter.Do <- scripts.Exec(scripts.NewLanguage("bash"), "scripts/bash/extract_vars.sh")
+			}
+		}
+	}()
+
+	func() {
+		scripter := scripts.NewHandler()
+		scripter.Run()
+
+		for {
+			if usr.Lab.History.Last == nil {
+				continue
 			}
 
-			GiveOutput(usr, eval.results)
-			scripter.Do <- scripts.Exec(bash, "scripts/extract_vars.sh")
-		case <-evalCh:
+			if syntax.IsFuncCall(*usr.Lab.History.Last) {
+				scripter.Do <- scripts.Exec(scripts.NewLanguage("bash"), "scripts/bash/clear_main.sh")
 
+			}
 		}
-
-		scripter.Do <- scripts.Exec(bash, "scripts/remove_print.sh")
-	}
+	}()
 }
 
 // Shortcut to using Display.RenderLine() within the context
@@ -108,7 +95,7 @@ func GiveOutput(u *User, s string) {
 //
 // TakeInput() is to GetLine() what Give() is to
 // Display.RenderLine().
-func TakeInput(usr *User) chan report {
+func TakeInput(usr *User) {
 	if usr.Lab.InBody {
 		output.devices["main"].(Display).PrintAndPrompt(&usr.Input.lines, usr.Lab.Depth)
 	} else {
@@ -118,13 +105,6 @@ func TakeInput(usr *User) chan report {
 	input := GetLine(usr.Input)
 
 	DetermCmd(usr, string(*input), usr.FileLock)
-
-	output := make(chan report)
-	e := NewEvaluator(usr.Lab.Main)
-
-	go e.Exec(output)
-
-	return output
 }
 
 // Most users will be more inclined to use Take() instead
