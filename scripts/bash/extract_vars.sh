@@ -2,8 +2,8 @@
 # Extract variables from current session
 
 dir=$(dirname $0)
-varfile="$dir/../.labs/session/vars"
-eval="$dir/../.labs/session/eval.go"
+varfile="$dir/../../.labs/session/vars"
+eval="$dir/../../.labs/session/eval.go"
 
 rm -f $varfile
 touch $varfile

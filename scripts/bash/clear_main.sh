@@ -3,8 +3,8 @@
 
 dir=$(dirname $0)
 
-tmp="$dir/../.labs/template"
-session="$dir/../.labs/session/lab.go"
+tmp="$dir/../../.labs/template"
+session="$dir/../../.labs/session/lab.go"
 
 if [[ ! -e $tmp ]]
 then

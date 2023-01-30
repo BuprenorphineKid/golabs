@@ -73,7 +73,6 @@ func (s *Handler) Run() {
 						debug.Stack(),
 					)
 				}
-			default:
 			}
 		}
 	}()

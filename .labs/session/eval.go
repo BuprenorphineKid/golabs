@@ -1,6 +1,11 @@
 package main
 
-func main() {
-	println("ass")
+import(
 
+)
+
+func  def(s string)  {
+func main() {
+ 
+c := fmt.Sprintf("%s%s", b, a)
 }

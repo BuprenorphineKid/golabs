@@ -1,8 +1,9 @@
 #!/bin/bash
 # Bash script for creating a new empty session.
 
-tmp="$0/../.labs/template"
-session="$0/../.labs/session/lab.go"
+dir=$(dirname $0)
+tmp="$dir/../.labs/template"
+session="$dir/../.labs/session/lab.go"
 
 if [[ ! -e $tmp ]]
 	touch $tmp

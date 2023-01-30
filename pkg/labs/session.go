@@ -3,7 +3,6 @@ package labs
 import (
 	"bufio"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 	"sync"
@@ -23,7 +22,7 @@ func NewContent() *Content {
 
 // Load it up
 func (c *Content) Load(file string) {
-	l, err := ioutil.ReadFile(file)
+	l, err := os.ReadFile(file)
 
 	if err != nil {
 		panic(err)
@@ -106,14 +105,13 @@ loop:
 	for {
 		select {
 		case l.MainLine = <-mch:
-			break
+			continue
 		case l.ImportLine = <-ich:
-			break
+			continue
 		case <-done:
 			wg.Wait()
 			break loop
 		default:
-			break
 		}
 
 		if l.MainLine > 0 && l.ImportLine > 0 {
@@ -187,5 +185,5 @@ func InsertString(path, str string, index int) error {
 
 	}
 
-	return ioutil.WriteFile(path, []byte(fileContent), 0644)
+	return os.WriteFile(path, []byte(fileContent), 0644)
 }
