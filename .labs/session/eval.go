@@ -1,12 +1,12 @@
 package main
 
-import "fmt"
+import ()
 
-func v() {
+func ass() {
+	var test int = 34
+	println(test)
 }
 func main() {
-	b := 56
-	a := 12
-	fmt.Println(b + a)
+	ass()
 
 }

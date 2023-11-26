@@ -2,9 +2,9 @@ package repl
 
 import (
 	"labs/pkg/cli"
-	"labs/pkg/labs"
+//	"labs/pkg/labs"
 	"labs/pkg/scripts"
-	"labs/pkg/syntax"
+//	"labs/pkg/syntax"
 	"sync"
 )
 
@@ -28,7 +28,7 @@ func Run() {
 	scripter := scripts.NewHandler()
 	scripter.Run()
 
-	go func() {
+	func() {
 		for {
 			TakeInput(usr)
 
@@ -36,28 +36,30 @@ func Run() {
 			rCh := make(chan report)
 			go eval.Exec(rCh)
 
-			select {
-			case info := <-rCh:
-				if !info.ok {
-					break
-				}
-
-				GiveOutput(usr, info.results)
-
-				scripter.Do <- scripts.Exec(scripts.NewLanguage("bash"), "scripts/bash/extract_vars.sh")
+			info := <-rCh
+			if !info.ok {
+				continue
 			}
+
+			GiveOutput(usr, info.results)
+
+			scripter.Do <- scripts.Exec(scripts.NewLanguage("bash"), "scripts/bash/extract_vars.sh")
 		}
 	}()
-
+	
+/*
 	func() {
 		for {
-			for usr.Lab.History.Last != nil && syntax.IsFuncCall(*usr.Lab.History.Last) {
+			if usr.Lab.History.Last == nil || *usr.Lab.History.Last == "" {
+				continue
+			}
+			if syntax.IsFuncCall(*usr.Lab.History.Last) {
 				scripter.Do <- scripts.Exec(scripts.NewLanguage("bash"), "scripts/bash/clear_main.sh")
 				usr.Lab.History = labs.NewHistory()
 			}
 		}
 	}()
-
+*/
 }
 
 // Shortcut to using Display.RenderLine() within the context

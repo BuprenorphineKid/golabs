@@ -63,7 +63,7 @@ func size() (int, int) {
 	var size [2]int
 	var str [2]string
 
-	c := exec.Command("tput", "columns")
+	c := exec.Command("tput", "cols")
 	c.Stdin = os.Stdin
 
 	strC, err := c.Output()

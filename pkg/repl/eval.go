@@ -40,7 +40,7 @@ func NewEvaluator(path string) *Evaluator {
 	e.imports = exec.Command("goimports", "-w", e.file)
 	e.imports.Stdin = os.Stdin
 
-	e.format = exec.Command("go", "fmt", "-w", e.file)
+	e.format = exec.Command("gofmt", "-w", e.file)
 	e.format.Stdin = os.Stdin
 
 	e.run = exec.Command("go", "run", e.file)
@@ -55,11 +55,6 @@ func (e *Evaluator) Exec(output chan report) {
 
 	err := e.imports.Run()
 	if err != nil {
-		if strings.Contains(err.Error(), "2") {
-			output <- report{results: "", ok: false}
-			return
-		}
-
 		err := e.format.Run()
 		if err != nil {
 			if strings.Contains(err.Error(), "2") {

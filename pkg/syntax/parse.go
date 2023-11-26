@@ -74,7 +74,7 @@ func Ints(s string) []string {
 }
 
 func IsFuncCall(s string) bool {
-	if !strings.Contains(s, "(") && !strings.Contains(s, ")") {
+	if !strings.ContainsAny(s, "()") {
 		return false
 	}
 

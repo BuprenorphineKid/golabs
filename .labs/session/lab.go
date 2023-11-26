@@ -4,9 +4,11 @@ import(
 
 )
 
-func  v()  {
+func  ass()  {
+        var test int = 34
+        println(test)
     }
 func main() {
- 
+ass()
 
 }
