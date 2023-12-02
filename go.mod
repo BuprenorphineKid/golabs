@@ -1,6 +1,6 @@
 module labs
 
-go 1.21.1
+go 1.21.4
 
 require golang.org/x/term v0.14.0
 

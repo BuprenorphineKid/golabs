@@ -1,5 +1,9 @@
 package cli
 
+import (
+	"fmt"
+)
+
 type Cursor struct {
 	X int
 	Y int
@@ -73,7 +77,7 @@ func (c *Cursor) AddY(n int) {
 }
 
 func (c *Cursor) MoveTo(x int, y int) {
-	print("\033[", y, ";", x, "H")
+	print("\033[", fmt.Sprint(y), ";", fmt.Sprint(x), "H")
 }
 
 func (c *Cursor) CutRest() {

@@ -1,15 +1,18 @@
 package repl
 
 import (
+	"fmt"
 	"labs/pkg/cli"
-//	"labs/pkg/labs"
 	"labs/pkg/scripts"
-//	"labs/pkg/syntax"
+	"strings"
 	"sync"
 )
 
 // Singleton of Terminal.
 var term = cli.NewTerminal()
+
+// Singleton of Frame.
+var frm = NewFrame(0, ((term.Lines / 3) + (term.Lines / 3)), term.Lines/3, term.Cols, "thick")
 
 // Instantiate objects, Start the main loop. This is the function
 // you use to start the application.
@@ -25,41 +28,35 @@ func Run() {
 	logo(usr.Input)
 
 	output.Register("main", newScreen())
+
+	frm.Draw()
+
 	scripter := scripts.NewHandler()
 	scripter.Run()
 
-	func() {
+	rCh := make(chan report)
+
+	go func() {
 		for {
 			TakeInput(usr)
 
 			eval := NewEvaluator(usr.Lab.Main)
-			rCh := make(chan report)
 			go eval.Exec(rCh)
 
+		}
+	}()
+
+	func() {
+		for {
 			info := <-rCh
 			if !info.ok {
 				continue
 			}
 
 			GiveOutput(usr, info.results)
+		}
+	}()
 
-			scripter.Do <- scripts.Exec(scripts.NewLanguage("bash"), "scripts/bash/extract_vars.sh")
-		}
-	}()
-	
-/*
-	func() {
-		for {
-			if usr.Lab.History.Last == nil || *usr.Lab.History.Last == "" {
-				continue
-			}
-			if syntax.IsFuncCall(*usr.Lab.History.Last) {
-				scripter.Do <- scripts.Exec(scripts.NewLanguage("bash"), "scripts/bash/clear_main.sh")
-				usr.Lab.History = labs.NewHistory()
-			}
-		}
-	}()
-*/
 }
 
 // Shortcut to using Display.RenderLine() within the context
@@ -73,12 +70,36 @@ func Run() {
 // make a call to GiveOutput() before calling Take() again.
 // Although it is recommended to try to.
 func GiveOutput(u *User, s string) {
-	output.SetLine(s)
-	output.devices["main"].(Display).PrintOutPrompt()
-	output.devices["main"].(Display).RenderLine()
+	term.Cursor.SavePos()
+	defer term.Cursor.RestorePos()
+	defer frm.Draw()
 
-	u.Input.AddLines(2)
-	term.Cursor.AddY(2)
+	ycurs := frm.y + 1
+	term.Cursor.MoveTo(frm.x+1, ycurs)
+
+	if strings.Contains(s, "\n") {
+
+		out := strings.Split(s, "\n")
+
+		for _, v := range out {
+			w := frm.width - 2
+			if len(v) >= w {
+				fmt.Print(v[:w])
+
+				ycurs++
+				term.Cursor.MoveTo(frm.x+1, ycurs)
+				ycurs++
+
+				fmt.Print(v[w:])
+			}
+			fmt.Print(v)
+		}
+	}
+
+	fmt.Print(s)
+
+	// output.devices["main"].(Display).RenderLine()
+
 }
 
 // Wraps GetLine() and handles the input accordingly.
