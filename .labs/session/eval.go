@@ -1,6 +1,8 @@
 package main
 
+import ()
+
 func main() {
-	println("ass")
+	println("howdy douchebag")
 
 }

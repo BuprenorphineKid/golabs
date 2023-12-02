@@ -1,0 +1,6 @@
+WARNING: linker: /data/data/com.termux/files/home/mystuff/go/src/labs/main: unsupported flags DT_FLAGS_1=0x8000001
+[?1049h[22;0;0t[H[2J[3J[0;0H[36;4;9m  __|  _ \ |      \   _ )  __|[0m
+[35;4;9m (_ | (   ||     _ \  _ \__ \ [0m
+[36;1;4;9m\___|\___/____|_/  _\___/____/[0m
+WARNING: linker: /data/data/com.termux/files/home/mystuff/go/bin/tbox: unsupported flags DT_FLAGS_1=0x8000001
+Error: Couldnt read size of terminal[?25l[5;0H[36;1;4;9mG[0;36;4;9m-[0;35;4;1mo[0;36;2;4;9m-[0;36;4;9m[[0;36;1;4;9m-[37;9;1mL[0;36;4;9m-[0;35;1;9m@[0;36;1;4;9m-[37;4;1mß[0;36;4;9m-[37;1;4m$[0;36;2;4;9m-[0;36;4;9;m][0m [35;1;9;5m<>[0m [?12l[?25h[?1049l[23;0;0t

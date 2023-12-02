@@ -2,3 +2,5 @@
 # Ignore analysis/error files
 .analysis/
 main
+go.*
+.labs
