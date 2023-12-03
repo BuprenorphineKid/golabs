@@ -35,9 +35,10 @@ func (c *Content) Load(file string) {
 
 // Write session file, duh
 func (c *Content) writeSessionFile(content []byte) {
-	os.Mkdir(".labs/session", 0777)
+	h, _ := os.UserHomeDir()
+	os.Mkdir(h+"/.labs/session", 0777)
 
-	proj, _ := os.Create(".labs/session/lab.go")
+	proj, _ := os.Create(h + "/.labs/session/lab.go")
 	defer proj.Close()
 
 	proj.Write(content)
@@ -51,11 +52,13 @@ func (c *Content) Setup() {
 // Write the Template for session
 // it may or may not be used dependin on cli flags
 func writeTemplate() []byte {
-	os.Mkdir(".labs", 0777)
+	h, _ := os.UserHomeDir()
+
+	os.Mkdir(h+"/.labs", 0777)
 
 	data := "package main\n\nimport(\n\n)\n\nfunc main() {\n\n}\n"
 
-	os.WriteFile(".labs/template", []byte(data), 0777)
+	os.WriteFile(h+"/.labs/template", []byte(data), 0777)
 	return []byte(data)
 }
 
@@ -67,10 +70,12 @@ func init() {
 func Args() {
 	flag.Parse()
 
+	h, _ := os.UserHomeDir()
+
 	c := NewContent()
 
 	if last == true {
-		c.Load(".labs/session/lab.go")
+		c.Load(h + "/.labs/session/lab.go")
 	} else if load != "" {
 		c.Load(load)
 	} else if load != "" && last == true {

@@ -53,7 +53,7 @@ func Run() {
 				continue
 			}
 
-			GiveOutput(usr, info.results)
+			go GiveOutput(usr, info.results)
 		}
 	}()
 
@@ -70,6 +70,19 @@ func Run() {
 // make a call to GiveOutput() before calling Take() again.
 // Although it is recommended to try to.
 func GiveOutput(u *User, s string) {
+	func() {
+		term.Cursor.SavePos()
+
+		for l := frm.y + 1; l < term.Lines; l++ {
+			term.Cursor.MoveTo(frm.x+3, l)
+			term.Cursor.CutRest()
+
+			frm.Draw()
+		}
+
+		term.Cursor.RestorePos()
+	}()
+
 	term.Cursor.SavePos()
 	defer term.Cursor.RestorePos()
 	defer frm.Draw()

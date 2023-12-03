@@ -27,7 +27,9 @@ type Evaluator struct {
 func NewEvaluator(path string) *Evaluator {
 	e := new(Evaluator)
 	e.Locker = new(sync.Mutex)
-	e.file = ".labs/session/eval.go"
+
+	h, _ := os.UserHomeDir()
+	e.file = h + "/.labs/session/eval.go"
 
 	func() {
 

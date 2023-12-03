@@ -47,7 +47,9 @@ func Save() {
 
 			name := string(buf)
 
-			c, err := os.ReadFile(".labs/session/lab.go")
+			h, _ := os.UserHomeDir()
+
+			c, err := os.ReadFile(h + ".labs/session/lab.go")
 			if err != nil {
 				panic(err)
 			}

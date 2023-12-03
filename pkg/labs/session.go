@@ -33,12 +33,14 @@ func (c *Content) Load(file string) {
 
 // Write session file, duh
 func (c *Content) writeSessionFile(content []byte) {
-	err := os.MkdirAll(".labs/session", 0777)
+	h, _ := os.UserHomeDir()
+	print(h)
+	err := os.MkdirAll(h+"/.labs/session", 0777)
 	if err != nil {
 		panic(PERMERROR)
 	}
 
-	proj, _ := os.Create(".labs/session/lab.go")
+	proj, _ := os.Create(h + "/.labs/session/lab.go")
 	defer proj.Close()
 
 	proj.Write(content)
@@ -62,9 +64,10 @@ type Lab struct {
 
 // Lab Constructor
 func NewLab() *Lab {
+	h, _ := os.UserHomeDir()
 	l := Lab{}
-	l.Main = ".labs/session/lab.go"
-	l.Lines, _ = file2lines(".labs/session/lab.go")
+	l.Main = h + "/.labs/session/lab.go"
+	l.Lines, _ = file2lines(h + "/.labs/session/lab.go")
 	l.InBody = false
 	l.Depth = 0
 	l.History = NewHistory()
@@ -125,11 +128,13 @@ loop:
 // Write the Template for session
 // it may or may not be used dependin on cli flags
 func writeTemplate() []byte {
-	os.Mkdir(".labs", 0777)
+	os.Mkdir("/.labs", 0777)
+
+	h, _ := os.UserHomeDir()
 
 	data := "package main\n\nimport(\n\n)\n\nfunc main() {\n\n}\n"
 
-	os.WriteFile(".labs/template", []byte(data), 0777)
+	os.WriteFile(h+"/.labs/template", []byte(data), 0777)
 
 	return []byte(data)
 }
