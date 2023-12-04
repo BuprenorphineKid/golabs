@@ -1,7 +1,6 @@
 package repl
 
 import (
-	"regexp"
 	"strings"
 
 	"labs/pkg/syntax"
@@ -175,12 +174,7 @@ func (s *HiLiter) Shade(str string) string {
 	var b = str
 
 	for _, def := range s.keyWords {
-		ok, _ := regexp.MatchString("\b"+def+"\b", b)
-
-		if ok {
-			b = strings.ReplaceAll(b, def, s.keyWords[def])
-
-		}
+		b = strings.Replace(b, def, s.keyWords[def], 1)
 	}
 
 	return b
