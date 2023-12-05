@@ -1,6 +1,7 @@
 package repl
 
 import (
+	"regexp"
 	"strings"
 
 	"labs/pkg/syntax"
@@ -173,8 +174,9 @@ func newHiLiter() *HiLiter {
 func (s *HiLiter) Shade(str string) string {
 	var b = str
 
-	for _, def := range s.keyWords {
-		b = strings.Replace(b, def, s.keyWords[def], 1)
+	for i, v := range s.List {
+		re := regexp.MustCompile(`(^|\b)` + strings.TrimSpace(s.List[i]) + `(\b|$)`)
+		b = re.ReplaceAllString(b, s.keyWords[v])
 	}
 
 	return b
