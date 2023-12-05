@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"labs/pkg/cli"
 	"labs/pkg/scripts"
+	"labs/pkg/syntax"
 	"strings"
 	"sync"
 )
@@ -69,7 +70,8 @@ func Run() {
 // call to the Take() function, user does not hve to
 // make a call to GiveOutput() before calling Take() again.
 // Although it is recommended to try to.
-func GiveOutput(u *User, s string) {
+func GiveOutput(u *User, str string) {
+	s := syntax.OnGrey(syntax.Black(str))
 	func() {
 		term.Cursor.SavePos()
 

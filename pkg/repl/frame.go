@@ -2,6 +2,7 @@ package repl
 
 import (
 	"fmt"
+	"labs/pkg/syntax"
 	"os"
 	"os/exec"
 )
@@ -26,6 +27,21 @@ func NewFrame(x, y, h, w int, s string) *frame {
 }
 
 func (f frame) Draw() {
+	term.Cursor.SavePos()
+
+	var scrnLine string
+
+	for i := 0; i < frm.width; i++ {
+		scrnLine = scrnLine + " "
+	}
+
+	for i := 0; i < frm.height; i++ {
+		term.Cursor.MoveTo(frm.x, frm.y+i)
+		fmt.Print(syntax.OnGrey(scrnLine))
+	}
+
+	term.Cursor.RestorePos()
+
 	cmd := exec.Command("tbox", fmt.Sprint(f.height), fmt.Sprint(f.width), fmt.Sprint(f.x), fmt.Sprint(f.y), f.style)
 
 	cmd.Stdout = os.Stdout

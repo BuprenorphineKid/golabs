@@ -24,6 +24,7 @@ const (
 	MAGENTA
 	CYAN
 	WHITE
+	GREY
 )
 
 const (
@@ -63,6 +64,10 @@ func White[T Blank](word T) string {
 	return fmt.Sprintf("%s%d%d%s%v%s", CSI, FG, WHITE, m, word, END)
 }
 
+func Grey[T Blank](word T) string {
+	return fmt.Sprintf("%s%d%d;5;248%s%v%s", CSI, FG, GREY, m, word, END)
+}
+
 func OnBlack[T Blank](word T) string {
 	return fmt.Sprintf("%s%d%d%s%v%s", CSI, BG, BLACK, m, word, END)
 }
@@ -93,4 +98,8 @@ func OnCyan[T Blank](word T) string {
 
 func OnWhite[T Blank](word T) string {
 	return fmt.Sprintf("%s%d%d%s%v%s", CSI, BG, WHITE, m, word, END)
+}
+
+func OnGrey[T Blank](word T) string {
+	return fmt.Sprintf("%s%d%d;5;242;2%s%v%s", CSI, BG, GREY, m, word, END)
 }
