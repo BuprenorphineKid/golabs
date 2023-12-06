@@ -101,5 +101,5 @@ func OnWhite[T Blank](word T) string {
 }
 
 func OnGrey[T Blank](word T) string {
-	return fmt.Sprintf("%s%d%d;5;242;2%s%v%s", CSI, BG, GREY, m, word, END)
+	return fmt.Sprintf("%s%d%d;5;242%s%v%s", CSI, BG, GREY, m, word, END)
 }

@@ -30,6 +30,7 @@ func Run() {
 
 	output.Register("main", newScreen())
 
+	frm.Fill()
 	frm.Draw()
 
 	scripter := scripts.NewHandler()
@@ -71,7 +72,8 @@ func Run() {
 // make a call to GiveOutput() before calling Take() again.
 // Although it is recommended to try to.
 func GiveOutput(u *User, str string) {
-	s := syntax.OnGrey(syntax.Black(str))
+	s := syntax.OnGrey(syntax.White(str))
+
 	func() {
 		term.Cursor.SavePos()
 
@@ -80,6 +82,7 @@ func GiveOutput(u *User, str string) {
 			term.Cursor.CutRest()
 
 			frm.Draw()
+			frm.Fill()
 		}
 
 		term.Cursor.RestorePos()
