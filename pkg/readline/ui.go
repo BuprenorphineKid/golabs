@@ -1,4 +1,4 @@
-package repl
+package readline
 
 import "strings"
 
@@ -16,10 +16,10 @@ const (
 	COUTPROMPT = "\033[35;9;1m<<\033[0m "
 )
 
-func logo(i *Input) {
+func Logo(i *Input) {
 	print(CLOGO)
 
-	term.Cursor.AddY(len(strings.Split(LOGO, "\n\r")) + 1)
+	Term.Cursor.AddY(len(strings.Split(LOGO, "\n\r")) + 1)
 	i.AddLines(len(strings.Split(LOGO, "\n\r")) + 1)
 }
 

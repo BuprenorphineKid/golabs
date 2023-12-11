@@ -2,11 +2,13 @@ package cli
 
 import (
 	"fmt"
+	"sync"
 )
 
 type Cursor struct {
 	X int
 	Y int
+	sync.Locker
 }
 
 func newCursor() *Cursor {

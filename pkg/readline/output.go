@@ -1,4 +1,4 @@
-package repl
+package readline
 
 import (
 	"fmt"
@@ -15,18 +15,18 @@ type subject interface {
 // notify output devices to then be displayed.
 type Output struct {
 	line    string
-	devices map[string]Device
+	Devices map[string]Device
 	shader  Shader
 }
 
 // Global unexported instance of Output just to make it universally
 // accessible. Seems to make the most sense to me
-var output = newOutput(newHiLiter())
+var Out = newOutput(newHiLiter())
 
 // Returns pointer to Output obj
 func newOutput(s Shader) *Output {
 	o := Output{}
-	o.devices = make(map[string]Device)
+	o.Devices = make(map[string]Device)
 	o.shader = s
 
 	return &o
@@ -34,22 +34,22 @@ func newOutput(s Shader) *Output {
 
 // Register method for aquiring new output devices.
 func (o *Output) Register(n string, d Device) {
-	o.devices[n] = d
+	o.Devices[n] = d
 }
 
 // Remove method for deleting devices.
 func (o *Output) Remove(d Device) {
-	for k, v := range o.devices {
+	for k, v := range o.Devices {
 		if v == d {
-			delete(o.devices, k)
+			delete(o.Devices, k)
 		}
 	}
 }
 
 // Notify all of your devices of the changes made to output.
 func (o *Output) Notify() {
-	for _, v := range o.devices {
-		v.update(o.line)
+	for _, v := range o.Devices {
+		v.Update(o.line)
 	}
 }
 
@@ -62,7 +62,7 @@ func (o *Output) SetLine(ln string) {
 
 // Implemented to be eligible as an output device.
 type Device interface {
-	update(string)
+	Update(string)
 }
 
 // Displayable device
@@ -81,7 +81,7 @@ type Screen struct {
 }
 
 // Returns pointer to Screen obj
-func newScreen() *Screen {
+func NewScreen() *Screen {
 	s := Screen{}
 
 	s.prevLines = make([]string, 0, 0)
@@ -91,7 +91,7 @@ func newScreen() *Screen {
 
 // Display method, implementation details dont matter that much as long as you
 // make the incoming data your at some point.
-func (s *Screen) update(line string) {
+func (s *Screen) Update(line string) {
 	s.Line = line
 }
 
@@ -104,57 +104,57 @@ func (s *Screen) PrintBuffer() {
 // current Line buffer, this is to update/redraw the lines as theyre being
 // typed.
 func (s *Screen) RenderLine() {
-	term.Cursor.Invisible()
-	term.Cursor.MoveTo(len(INPROMPT), term.Cursor.GetY())
-	term.Cursor.CutRest()
+	Term.Cursor.Invisible()
+	Term.Cursor.MoveTo(len(INPROMPT), Term.Cursor.GetY())
+	Term.Cursor.CutRest()
 	s.PrintBuffer()
 
-	term.Cursor.MoveTo(term.Cursor.GetX(), term.Cursor.GetY())
-	term.Cursor.Normal()
+	Term.Cursor.MoveTo(Term.Cursor.GetX(), Term.Cursor.GetY())
+	Term.Cursor.Normal()
 }
 
 // Move Cursor to true beginning of current line, and prints the Colored
 // INPROMPT (CINPROMPT) constant.
 func (s *Screen) PrintInPrompt() {
-	term.Cursor.Invisible()
+	Term.Cursor.Invisible()
 
-	term.Cursor.MoveTo(0, term.Cursor.GetY())
+	Term.Cursor.MoveTo(0, Term.Cursor.GetY())
 	fmt.Print(CINPROMPT)
-	term.Cursor.SetX(len(INPROMPT))
+	Term.Cursor.SetX(len(INPROMPT))
 
-	term.Cursor.Normal()
+	Term.Cursor.Normal()
 }
 
 // Move Cursor to relative beginning of curent line, then prints thd Colored
 // AND PROMPT (CANDPROMPT) constant.
 func (s *Screen) PrintAndPrompt(ln *[]line, depth int) {
-	term.Cursor.Invisible()
+	Term.Cursor.Invisible()
 
 	l := *ln
 
-	term.Cursor.MoveTo(len(INPROMPT)-len(ANDPROMPT), term.Cursor.GetY())
+	Term.Cursor.MoveTo(len(INPROMPT)-len(ANDPROMPT), Term.Cursor.GetY())
 	fmt.Print(CANDPROMPT)
-	term.Cursor.MoveTo(len(INPROMPT), term.Cursor.GetY())
-	term.Cursor.SetX(len(INPROMPT))
+	Term.Cursor.MoveTo(len(INPROMPT), Term.Cursor.GetY())
+	Term.Cursor.SetX(len(INPROMPT))
 
 	for j := 0; j < depth; j++ {
-		l[term.Cursor.GetY()] = l[term.Cursor.GetY()].Tab(term.Cursor.GetX())
+		l[Term.Cursor.GetY()] = l[Term.Cursor.GetY()].Tab(Term.Cursor.GetX())
 		Tab()
 
-		term.Cursor.AddX(4)
+		Term.Cursor.AddX(4)
 		s.RenderLine()
 	}
 
-	term.Cursor.Normal()
+	Term.Cursor.Normal()
 }
 
 func (s *Screen) PrintOutPrompt() {
-	term.Cursor.Invisible()
+	Term.Cursor.Invisible()
 
-	term.Cursor.MoveTo(len(INPROMPT)-len(OUTPROMPT), term.Cursor.GetY())
+	Term.Cursor.MoveTo(len(INPROMPT)-len(OUTPROMPT), Term.Cursor.GetY())
 	fmt.Print(COUTPROMPT)
-	term.Cursor.MoveTo(len(INPROMPT), term.Cursor.GetY())
-	term.Cursor.SetX(len(INPROMPT))
+	Term.Cursor.MoveTo(len(INPROMPT), Term.Cursor.GetY())
+	Term.Cursor.SetX(len(INPROMPT))
 
-	term.Cursor.Normal()
+	Term.Cursor.Normal()
 }

@@ -1,4 +1,4 @@
-package repl
+package readline
 
 // Custom string type to represent the inner line buffer that gets
 // sent around and evaluated and what not. The lines should always

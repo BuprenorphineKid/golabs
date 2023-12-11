@@ -3,6 +3,7 @@ package repl
 import (
 	"labs/pkg/cli"
 	"labs/pkg/labs"
+	"labs/pkg/readline"
 	"sync"
 )
 
@@ -11,7 +12,7 @@ import (
 // are exvlusive to a user. Think env, files, input/output etc.
 type User struct {
 	Name     string
-	Input    *Input
+	Input    *readline.Input
 	Lab      *labs.Lab
 	done     chan struct{}
 	FileLock sync.Locker
@@ -21,7 +22,7 @@ type User struct {
 func NewUser(t *cli.Terminal) *User {
 	var u User
 
-	u.Input = NewInput(t)
+	u.Input = readline.NewInput(t)
 	u.Lab = labs.NewLab()
 
 	u.FileLock = new(sync.Mutex)

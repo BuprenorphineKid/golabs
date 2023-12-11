@@ -1,4 +1,4 @@
-package repl
+package eval
 
 import (
 	"fmt"
@@ -11,9 +11,9 @@ import (
 	"sync"
 )
 
-type report struct {
-	ok      bool
-	results string
+type Report struct {
+	Ok      bool
+	Results string
 }
 
 type Evaluator struct {
@@ -51,7 +51,7 @@ func NewEvaluator(path string) *Evaluator {
 	return e
 }
 
-func (e *Evaluator) Exec(output chan report) {
+func (e *Evaluator) Exec(output chan Report) {
 	e.Lock()
 	defer e.Unlock()
 
@@ -60,11 +60,11 @@ func (e *Evaluator) Exec(output chan report) {
 		err := e.format.Run()
 		if err != nil {
 			if strings.Contains(err.Error(), "2") {
-				output <- report{results: "", ok: false}
+				output <- Report{Results: "", Ok: false}
 				return
 			}
 
-			term.Normal()
+			cli.NewTerminal().Normal()
 			cli.Restore()
 
 			log.Fatalf("\n\r|%s|\n\r%v", "Evaluator.Exec()", err)
@@ -85,14 +85,14 @@ func (e *Evaluator) Exec(output chan report) {
 		f := re.ReplaceAll(res, replacement)
 
 		if strings.Contains(string(f), "not used") {
-			output <- report{results: "", ok: false}
+			output <- Report{Results: "", Ok: false}
 		}
 
-		output <- report{results: fmt.Sprintf("Err: %v", strings.TrimSpace(string(f))), ok: true}
+		output <- Report{Results: fmt.Sprintf("Err: %v", strings.TrimSpace(string(f))), Ok: true}
 
 		return
 	}
 
-	output <- report{results: string(res), ok: true}
+	output <- Report{Results: string(res), Ok: true}
 
 }

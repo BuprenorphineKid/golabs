@@ -3,17 +3,19 @@ package repl
 import (
 	"fmt"
 	"labs/pkg/cli"
+	"labs/pkg/eval"
+	"labs/pkg/readline"
 	"labs/pkg/scripts"
 	"labs/pkg/syntax"
+	"labs/pkg/window"
 	"strings"
-	"sync"
 )
 
 // Singleton of Terminal.
-var term = cli.NewTerminal()
+var term = readline.Term
 
 // Singleton of Frame.
-var frm = NewFrame(0, ((term.Lines / 3) + (term.Lines / 3)), term.Lines/3, term.Cols, "thick")
+var win = window.NewWindow(0, (term.Lines/3 + term.Lines/3), term.Lines/3, term.Cols, "thick")
 
 // Instantiate objects, Start the main loop. This is the function
 // you use to start the application.
@@ -21,29 +23,31 @@ func Run() {
 	cli.Ready()
 	defer cli.Restore()
 
+	win.LoadScreen()
+
 	term.Clear()
 	term.RawMode()
 	defer term.Normal()
 
 	usr := NewUser(term)
-	logo(usr.Input)
+	readline.Logo(usr.Input)
 
-	output.Register("main", newScreen())
+	readline.Out.Register("main", readline.NewScreen())
 
-	frm.Fill()
-	frm.Draw()
+	win.Fill()
+	win.Draw()
 
 	scripter := scripts.NewHandler()
 	scripter.Run()
 
-	rCh := make(chan report)
+	rCh := make(chan eval.Report)
 
 	go func() {
 		for {
 			TakeInput(usr)
 
-			eval := NewEvaluator(usr.Lab.Main)
-			go eval.Exec(rCh)
+			ev := eval.NewEvaluator(usr.Lab.Main)
+			go ev.Exec(rCh)
 
 		}
 	}()
@@ -51,11 +55,11 @@ func Run() {
 	func() {
 		for {
 			info := <-rCh
-			if !info.ok {
+			if !info.Ok {
 				continue
 			}
 
-			go GiveOutput(usr, info.results)
+			GiveOutput(usr, info.Results)
 		}
 	}()
 
@@ -71,50 +75,44 @@ func Run() {
 // call to the Take() function, user does not hve to
 // make a call to GiveOutput() before calling Take() again.
 // Although it is recommended to try to.
-func GiveOutput(u *User, str string) {
-	s := syntax.OnGrey(syntax.White(str))
-
-	func() {
-		term.Cursor.SavePos()
-
-		for l := frm.y + 1; l < term.Lines; l++ {
-			term.Cursor.MoveTo(frm.x+3, l)
-			term.Cursor.CutRest()
-
-			frm.Draw()
-			frm.Fill()
-		}
-
-		term.Cursor.RestorePos()
-	}()
-
+func GiveOutput(u *User, s string) {
 	term.Cursor.SavePos()
 	defer term.Cursor.RestorePos()
-	defer frm.Draw()
 
-	ycurs := frm.y + 1
-	term.Cursor.MoveTo(frm.x+1, ycurs)
+	win.Fill()
+	defer win.Draw()
+
+	ycurs := win.Y + 1
+	xcurs := win.X + 3
+	term.Cursor.MoveTo(xcurs, ycurs)
 
 	if strings.Contains(s, "\n") {
 
 		out := strings.Split(s, "\n")
 
 		for _, v := range out {
-			w := frm.width - 2
-			if len(v) >= w {
-				fmt.Print(v[:w])
+			w := win.Width
+
+			if len(v) > w {
+				fmt.Print(syntax.OnGrey(syntax.White(v[:w])))
 
 				ycurs++
-				term.Cursor.MoveTo(frm.x+1, ycurs)
-				ycurs++
+				term.Cursor.MoveTo(xcurs, ycurs)
 
-				fmt.Print(v[w:])
+				fmt.Print(syntax.OnGrey(syntax.White(v[w:])))
+
+				ycurs++
+				term.Cursor.MoveTo(xcurs, ycurs)
+
+				continue
 			}
-			fmt.Print(v)
+
+			fmt.Print(syntax.OnGrey(syntax.White(v)))
+			return
 		}
 	}
 
-	fmt.Print(s)
+	fmt.Print(syntax.OnGrey(syntax.White(s)))
 
 	// output.devices["main"].(Display).RenderLine()
 
@@ -131,51 +129,23 @@ func GiveOutput(u *User, str string) {
 // TakeInput() is to GetLine() what Give() is to
 // Display.RenderLine().
 func TakeInput(usr *User) {
-	if usr.Lab.InBody {
-		output.devices["main"].(Display).PrintAndPrompt(&usr.Input.lines, usr.Lab.Depth)
-	} else {
-		output.devices["main"].(Display).PrintInPrompt()
+	if len(usr.Input.Lines) >= (term.Lines - (term.Lines / 3) - 1) {
+		usr.Input.Scroll()
+
+		input := readline.ReadLine(usr.Input)
+
+		DetermCmd(usr, string(*input), usr.FileLock)
+
+		return
 	}
 
-	input := GetLine(usr.Input)
+	if usr.Lab.InBody {
+		readline.Out.Devices["main"].(readline.Display).PrintAndPrompt(&usr.Input.Lines, usr.Lab.Depth)
+	} else {
+		readline.Out.Devices["main"].(readline.Display).PrintInPrompt()
+	}
+
+	input := readline.ReadLine(usr.Input)
 
 	DetermCmd(usr, string(*input), usr.FileLock)
-}
-
-// Most users will be more inclined to use Take() instead
-// because it does the dirty work for you.
-//
-// Start Input Loop that after its done reading input and
-// filling buffers, concurrently processes each.
-func GetLine(i *Input) *line {
-	for {
-		if i.InDebug {
-			var dbwg sync.WaitGroup
-			dbwg.Add(1)
-			i.Debugger.Ready <- &dbwg
-			dbwg.Wait()
-		}
-
-		i.done = make(chan struct{}, 1)
-		i.read()
-
-		var nlwg sync.WaitGroup
-		nlwg.Add(1)
-
-		var bufs = []buffer{&i.Fbuf, &i.Rbuf, &i.Spbuf, &i.Mvbuf, &i.Wbuf}
-		go ProccessBuffers(bufs, i, &nlwg)
-
-		nlwg.Wait()
-
-		output.SetLine(string(i.lines[term.Cursor.Y]))
-		output.devices["main"].(Display).RenderLine()
-
-		select {
-		case <-i.done:
-			return &i.lines[term.Cursor.Y-1]
-		default:
-			continue
-		}
-
-	}
 }

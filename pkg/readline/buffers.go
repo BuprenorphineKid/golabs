@@ -1,4 +1,4 @@
-package repl
+package readline
 
 /* I realize alot of the implementation and logic in this file can
 be a little bit hard to follow.. Its literally all because i
@@ -28,7 +28,7 @@ func (w wbuf) process(i *Input) {
 		return
 	}
 
-	oldY := term.Cursor.GetY()
+	oldY := Term.Cursor.GetY()
 
 	i.write(w)
 
@@ -36,11 +36,11 @@ func (w wbuf) process(i *Input) {
 	newLines := len(parts) - 1
 
 	for _, v := range parts {
-		term.Cursor.AddX(len(v))
+		Term.Cursor.AddX(len(v))
 	}
 
-	term.Cursor.AddY(newLines)
-	newY := term.Cursor.GetY()
+	Term.Cursor.AddY(newLines)
+	newY := Term.Cursor.GetY()
 
 	if oldY != newY {
 		i.AddLines(newLines)
@@ -68,56 +68,66 @@ type spbuf []byte
 func (sp spbuf) process(i *Input) {
 	switch string(sp) {
 	case "HOME":
-		term.Cursor.Home(len(INPROMPT))
-		term.Cursor.SetX(len(INPROMPT))
+		Term.Cursor.Home(len(INPROMPT))
+		Term.Cursor.SetX(len(INPROMPT))
 	case "END":
-		term.Cursor.End(len(i.lines[term.Cursor.GetY()]) + len(INPROMPT))
-		term.Cursor.SetX(len(i.lines[term.Cursor.GetY()]) + len(INPROMPT))
+		Term.Cursor.End(len(i.Lines[len(i.Lines)-1]) + len(INPROMPT))
+		Term.Cursor.SetX(len(i.Lines[len(i.Lines)-1]) + len(INPROMPT))
 	case "BACK":
-		if term.Cursor.GetX() <= len(INPROMPT) ||
-			term.Cursor.GetX()-len(INPROMPT) > len(i.lines[term.Cursor.GetY()]) {
+		if Term.Cursor.GetX() <= len(INPROMPT) ||
+			Term.Cursor.GetX()-len(INPROMPT) > len(i.Lines[len(i.Lines)-1]) {
 			return
 		}
 
-		i.lines[term.Cursor.GetY()] = i.lines[term.Cursor.GetY()].Backspace(term.Cursor.GetX())
-		term.Cursor.AddX(-1)
+		i.Lines[len(i.Lines)-1] = i.Lines[len(i.Lines)-1].Backspace(Term.Cursor.GetX())
+		Term.Cursor.AddX(-1)
 
-		term.Cursor.Left()
+		Term.Cursor.Left()
 
-		output.SetLine(string(i.lines[term.Cursor.GetY()]))
-		output.devices["main"].(Display).RenderLine()
+		Out.SetLine(string(i.Lines[len(i.Lines)-1]))
+		Out.Devices["main"].(Display).RenderLine()
 
-		term.Cursor.Left()
+		Term.Cursor.Left()
 	case "DEL":
-		if term.Cursor.GetX() < len(INPROMPT) ||
-			term.Cursor.GetX()-len(INPROMPT) > len(i.lines[term.Cursor.GetY()]) {
+		if Term.Cursor.GetX() < len(INPROMPT) ||
+			Term.Cursor.GetX()-len(INPROMPT) > len(i.Lines[len(i.Lines)-1]) {
 			return
 		}
 
-		i.lines[term.Cursor.GetY()] = i.lines[term.Cursor.GetY()].DelChar(term.Cursor.GetX())
+		i.Lines[len(i.Lines)-1] = i.Lines[len(i.Lines)-1].DelChar(Term.Cursor.GetX())
 
-		output.SetLine(string(i.lines[term.Cursor.GetY()]))
-		output.devices["main"].(Display).RenderLine()
+		Out.SetLine(string(i.Lines[len(i.Lines)-1]))
+		Out.Devices["main"].(Display).RenderLine()
 	case "NEWL":
-		term.Cursor.MoveTo(0, len(i.lines))
-		term.Cursor.AddY(len(i.lines) - term.Cursor.GetY())
-		term.Cursor.SetX(0)
+		if Term.Cursor.GetY() == (Term.Lines-(Term.Lines/3))-1 {
+			Term.Cursor.MoveTo(0, len(i.Lines)-1)
+			Term.Cursor.SetX(0)
+
+			i.AddLines(1)
+
+			i.done <- struct{}{}
+			return
+		}
+
+		Term.Cursor.MoveTo(0, len(i.Lines))
+		Term.Cursor.AddY(len(i.Lines) - Term.Cursor.GetY())
+		Term.Cursor.SetX(0)
 
 		i.AddLines(1)
 
 		i.done <- struct{}{}
 		return
 	case "TAB":
-		if term.Cursor.GetX() >= term.Cols-8 ||
-			term.Cursor.GetX() < 0 {
+		if Term.Cursor.GetX() >= Term.Cols-8 ||
+			Term.Cursor.GetX() < 0 {
 			return
 		}
 
-		i.lines[term.Cursor.GetY()] = i.lines[term.Cursor.GetY()].Tab(term.Cursor.GetX())
-		term.Cursor.AddX(4)
+		i.Lines[len(i.Lines)-1] = i.Lines[len(i.Lines)-1].Tab(Term.Cursor.GetX())
+		Term.Cursor.AddX(4)
 
-		output.SetLine(string(i.lines[term.Cursor.GetY()]))
-		output.devices["main"].(Display).RenderLine()
+		Out.SetLine(string(i.Lines[len(i.Lines)-1]))
+		Out.Devices["main"].(Display).RenderLine()
 	}
 }
 
@@ -129,43 +139,53 @@ type mvbuf []byte
 func (mv mvbuf) process(i *Input) {
 	switch string(mv) {
 	case "UP":
-		if term.Cursor.GetY() <= 5 {
+		if Term.Cursor.GetY() <= 5 {
 			return
 		}
 
-		term.Cursor.Up()
-		term.Cursor.AddY(-1)
+		if Term.Cursor.GetY() <= 5 && i.ScrollCount > 0 {
+			i.ScrollBack()
+			return
+		}
 
-		if term.Cursor.GetX() > len(i.lines[term.Cursor.GetY()])+len(INPROMPT) {
-			term.Cursor.MoveTo(len(i.lines[term.Cursor.GetY()])+len(INPROMPT), term.Cursor.GetY())
-			term.Cursor.SetX(len(i.lines[term.Cursor.GetY()]) + len(INPROMPT))
+		Term.Cursor.Up()
+		Term.Cursor.AddY(-1)
+
+		if Term.Cursor.GetX() > len(i.Lines[len(i.Lines)-1])+len(INPROMPT) {
+			Term.Cursor.MoveTo(len(i.Lines[len(i.Lines)-1])+len(INPROMPT), Term.Cursor.GetY())
+			Term.Cursor.SetX(len(i.Lines[len(i.Lines)-1]) + len(INPROMPT))
 		}
 	case "DOWN":
-		if term.Cursor.GetY() >= len(i.lines)-1 {
+		if Term.Cursor.GetY() >= len(i.Lines)-1 {
 			return
 		}
 
-		term.Cursor.Down()
-		term.Cursor.AddY(1)
+		if Term.Cursor.GetY() == (Term.Lines/3)-1 && Term.Cursor.GetY() < len(i.Lines) && i.ScrollCount > 0 {
+			i.Scroll()
+			return
+		}
 
-		if term.Cursor.GetX() > len(i.lines[term.Cursor.GetY()])+len(INPROMPT) {
-			term.Cursor.MoveTo(len(i.lines[term.Cursor.GetY()])+len(INPROMPT), term.Cursor.GetY())
-			term.Cursor.SetX(len(i.lines[term.Cursor.GetY()]) + len(INPROMPT))
+		Term.Cursor.Down()
+		Term.Cursor.AddY(1)
+
+		if Term.Cursor.GetX() > len(i.Lines[len(i.Lines)-1])+len(INPROMPT) {
+			Term.Cursor.MoveTo(len(i.Lines[len(i.Lines)-1])+len(INPROMPT), Term.Cursor.GetY())
+			Term.Cursor.SetX(len(i.Lines[len(i.Lines)-1]) + len(INPROMPT))
 		}
 	case "RIGHT":
-		if term.Cursor.GetX() >= len(INPROMPT)+len(i.lines[term.Cursor.GetY()]) {
+		if Term.Cursor.GetX() >= len(INPROMPT)+len(i.Lines[len(i.Lines)-1]) {
 			return
 		}
 
-		term.Cursor.Right()
-		term.Cursor.AddX(1)
+		Term.Cursor.Right()
+		Term.Cursor.AddX(1)
 	case "LEFT":
-		if term.Cursor.GetX() <= len(INPROMPT) {
+		if Term.Cursor.GetX() <= len(INPROMPT) {
 			return
 		}
 
-		term.Cursor.Left()
-		term.Cursor.AddX(-1)
+		Term.Cursor.Left()
+		Term.Cursor.AddX(-1)
 	}
 }
 
@@ -276,7 +296,7 @@ func killCheck(i *Input, wg *sync.WaitGroup) {
 		return
 	}
 
-	term.Normal()
+	Term.Normal()
 	cli.Restore()
 	os.Exit(0)
 }
