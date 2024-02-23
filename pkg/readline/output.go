@@ -2,18 +2,12 @@ package readline
 
 import (
 	"fmt"
+	"labs/pkg/labs"
 )
 
-// Implimented to be s subject for observer pattern.
-type subject interface {
-	Register(Device)
-	Remove(Device)
-	Notify()
-}
-
-// Output Subject object for an observer pattern in which the Output obj will
+// output Subject object for an observer pattern in which the output obj will
 // notify output devices to then be displayed.
-type Output struct {
+type output struct {
 	line    string
 	Devices map[string]Device
 	shader  Shader
@@ -21,11 +15,11 @@ type Output struct {
 
 // Global unexported instance of Output just to make it universally
 // accessible. Seems to make the most sense to me
-var Out = newOutput(newHiLiter())
+var out = newOutput(newHiLiter())
 
 // Returns pointer to Output obj
-func newOutput(s Shader) *Output {
-	o := Output{}
+func newOutput(s Shader) *output {
+	o := output{}
 	o.Devices = make(map[string]Device)
 	o.shader = s
 
@@ -33,12 +27,12 @@ func newOutput(s Shader) *Output {
 }
 
 // Register method for aquiring new output devices.
-func (o *Output) Register(n string, d Device) {
+func (o *output) Register(n string, d Device) {
 	o.Devices[n] = d
 }
 
 // Remove method for deleting devices.
-func (o *Output) Remove(d Device) {
+func (o *output) Remove(d Device) {
 	for k, v := range o.Devices {
 		if v == d {
 			delete(o.Devices, k)
@@ -47,7 +41,7 @@ func (o *Output) Remove(d Device) {
 }
 
 // Notify all of your devices of the changes made to output.
-func (o *Output) Notify() {
+func (o *output) Notify() {
 	for _, v := range o.Devices {
 		v.Update(o.line)
 	}
@@ -55,7 +49,7 @@ func (o *Output) Notify() {
 
 // Method of updating line to whats current, shading it, tben alerting
 // the devices.
-func (o *Output) SetLine(ln string) {
+func (o *output) SetLine(ln string) {
 	o.line = o.shader.Shade(ln)
 	o.Notify()
 }
@@ -81,7 +75,7 @@ type Screen struct {
 }
 
 // Returns pointer to Screen obj
-func NewScreen() *Screen {
+func newScreen() *Screen {
 	s := Screen{}
 
 	s.prevLines = make([]string, 0, 0)
@@ -157,4 +151,26 @@ func (s *Screen) PrintOutPrompt() {
 	Term.Cursor.SetX(len(INPROMPT))
 
 	Term.Cursor.Normal()
+}
+
+type Echo struct {
+	Lab *labs.Lab
+	In  *Input
+}
+
+func NewEcho(l *labs.Lab, i *Input) *Echo {
+	e := Echo{}
+	e.Lab = l
+	e.In = i
+
+	return &e
+
+}
+
+func (e Echo) Display() {
+	if e.Lab.InBody {
+		out.Devices["main"].(Display).PrintAndPrompt(&e.In.Lines, e.Lab.Depth)
+	} else {
+		out.Devices["main"].(Display).PrintInPrompt()
+	}
 }

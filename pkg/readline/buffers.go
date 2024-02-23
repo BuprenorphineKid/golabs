@@ -84,8 +84,8 @@ func (sp spbuf) process(i *Input) {
 
 		Term.Cursor.Left()
 
-		Out.SetLine(string(i.Lines[len(i.Lines)-1]))
-		Out.Devices["main"].(Display).RenderLine()
+		out.SetLine(string(i.Lines[len(i.Lines)-1]))
+		out.Devices["main"].(Display).RenderLine()
 
 		Term.Cursor.Left()
 	case "DEL":
@@ -96,8 +96,8 @@ func (sp spbuf) process(i *Input) {
 
 		i.Lines[len(i.Lines)-1] = i.Lines[len(i.Lines)-1].DelChar(Term.Cursor.GetX())
 
-		Out.SetLine(string(i.Lines[len(i.Lines)-1]))
-		Out.Devices["main"].(Display).RenderLine()
+		out.SetLine(string(i.Lines[len(i.Lines)-1]))
+		out.Devices["main"].(Display).RenderLine()
 	case "NEWL":
 		if Term.Cursor.GetY() == (Term.Lines-(Term.Lines/3))-1 {
 			Term.Cursor.MoveTo(0, len(i.Lines)-1)
@@ -126,8 +126,8 @@ func (sp spbuf) process(i *Input) {
 		i.Lines[len(i.Lines)-1] = i.Lines[len(i.Lines)-1].Tab(Term.Cursor.GetX())
 		Term.Cursor.AddX(4)
 
-		Out.SetLine(string(i.Lines[len(i.Lines)-1]))
-		Out.Devices["main"].(Display).RenderLine()
+		out.SetLine(string(i.Lines[len(i.Lines)-1]))
+		out.Devices["main"].(Display).RenderLine()
 	}
 }
 

@@ -1,14 +1,11 @@
 package repl
 
 import (
-	"fmt"
 	"labs/pkg/cli"
 	"labs/pkg/eval"
 	"labs/pkg/readline"
 	"labs/pkg/scripts"
-	"labs/pkg/syntax"
 	"labs/pkg/window"
-	"strings"
 )
 
 // Singleton of Terminal.
@@ -32,7 +29,10 @@ func Run() {
 	usr := NewUser(term)
 	readline.Logo(usr.Input)
 
-	readline.Out.Register("main", readline.NewScreen())
+	readline.Init()
+
+	scrn := window.NewScreen(win, &term.Cursor)
+	echo := readline.NewEcho(usr.Lab, usr.Input)
 
 	win.Fill()
 	win.Draw()
@@ -44,10 +44,10 @@ func Run() {
 
 	go func() {
 		for {
-			TakeInput(usr)
+			TakeInput(usr, echo)
 
 			ev := eval.NewEvaluator(usr.Lab.Main)
-			go ev.Exec(rCh)
+			ev.Exec(rCh)
 
 		}
 	}()
@@ -59,7 +59,8 @@ func Run() {
 				continue
 			}
 
-			GiveOutput(usr, info.Results)
+			scrn.Wrap(info.Results)
+			GiveOutput(scrn)
 		}
 	}()
 
@@ -75,47 +76,9 @@ func Run() {
 // call to the Take() function, user does not hve to
 // make a call to GiveOutput() before calling Take() again.
 // Although it is recommended to try to.
-func GiveOutput(u *User, s string) {
-	term.Cursor.SavePos()
-	defer term.Cursor.RestorePos()
+func GiveOutput(out Outputter) {
 
-	win.Fill()
-	defer win.Draw()
-
-	ycurs := win.Y + 1
-	xcurs := win.X + 3
-	term.Cursor.MoveTo(xcurs, ycurs)
-
-	if strings.Contains(s, "\n") {
-
-		out := strings.Split(s, "\n")
-
-		for _, v := range out {
-			w := win.Width
-
-			if len(v) > w {
-				fmt.Print(syntax.OnGrey(syntax.White(v[:w])))
-
-				ycurs++
-				term.Cursor.MoveTo(xcurs, ycurs)
-
-				fmt.Print(syntax.OnGrey(syntax.White(v[w:])))
-
-				ycurs++
-				term.Cursor.MoveTo(xcurs, ycurs)
-
-				continue
-			}
-
-			fmt.Print(syntax.OnGrey(syntax.White(v)))
-			return
-		}
-	}
-
-	fmt.Print(syntax.OnGrey(syntax.White(s)))
-
-	// output.devices["main"].(Display).RenderLine()
-
+	out.Display()
 }
 
 // Wraps GetLine() and handles the input accordingly.
@@ -128,7 +91,7 @@ func GiveOutput(u *User, s string) {
 //
 // TakeInput() is to GetLine() what Give() is to
 // Display.RenderLine().
-func TakeInput(usr *User) {
+func TakeInput(usr *User, echo *readline.Echo) {
 	if len(usr.Input.Lines) >= (term.Lines - (term.Lines / 3) - 1) {
 		usr.Input.Scroll()
 
@@ -139,11 +102,7 @@ func TakeInput(usr *User) {
 		return
 	}
 
-	if usr.Lab.InBody {
-		readline.Out.Devices["main"].(readline.Display).PrintAndPrompt(&usr.Input.Lines, usr.Lab.Depth)
-	} else {
-		readline.Out.Devices["main"].(readline.Display).PrintInPrompt()
-	}
+	GiveOutput(echo)
 
 	input := readline.ReadLine(usr.Input)
 

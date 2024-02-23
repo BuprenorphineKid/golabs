@@ -163,8 +163,8 @@ func ReadLine(i *Input) *line {
 
 		nlwg.Wait()
 
-		Out.SetLine(string(i.Lines[len(i.Lines)-1]))
-		Out.Devices["main"].(Display).RenderLine()
+		out.SetLine(string(i.Lines[len(i.Lines)-1]))
+		out.Devices["main"].(Display).RenderLine()
 
 		select {
 		case <-i.done:
