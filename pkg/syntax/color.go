@@ -16,6 +16,15 @@ const (
 )
 
 const (
+	_ int = iota
+	BOLD
+	FAINT
+	ITALIC
+	UNDERLINE
+	STRIKE
+)
+
+const (
 	BLACK Color = iota
 	RED
 	GREEN
@@ -31,6 +40,26 @@ const (
 	m          = "m"
 	END string = "\033[0m"
 )
+
+func Bold[T Blank](word T) string {
+	return fmt.Sprintf("%s%d%s%v%s", CSI, BOLD, m, word, END)
+}
+
+func Faint[T Blank](word T) string {
+	return fmt.Sprintf("%s%d%s%v%s", CSI, FAINT, m, word, END)
+}
+
+func Italicized[T Blank](word T) string {
+	return fmt.Sprintf("%s%d%s%v%s", CSI, ITALIC, m, word, END)
+}
+
+func Underlined[T Blank](word T) string {
+	return fmt.Sprintf("%s%d%s%v%s", CSI, UNDERLINE, m, word, END)
+}
+
+func Strikethrough[T Blank](word T) string {
+	return fmt.Sprintf("%s%d%s%v%s", CSI, STRIKE, m, word, END)
+}
 
 func Black[T Blank](word T) string {
 	return fmt.Sprintf("%s%d%d%s%v%s", CSI, FG, BLACK, m, word, END)

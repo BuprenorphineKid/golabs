@@ -11,8 +11,10 @@ type Cursor struct {
 	sync.Locker
 }
 
-func newCursor() *Cursor {
+func NewCursor() *Cursor {
 	c := Cursor{}
+	c.Locker = new(sync.Mutex)
+
 	return &c
 }
 

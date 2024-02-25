@@ -41,6 +41,7 @@ func (d *Debugger) CleanUp(i *Input) {
 	x := Term.Cols / 3
 	y := Term.Lines / 3
 
+	Term.Cursor.Lock()
 	Term.Cursor.SavePos()
 	Term.Cursor.Invisible()
 
@@ -73,11 +74,13 @@ func (d *Debugger) CleanUp(i *Input) {
 	Term.Cursor.RestorePos()
 	Term.Cursor.Y = old
 	Term.Cursor.Normal()
+	Term.Cursor.Unlock()
 }
 
 func (d *Debugger) PosAndLines(i *Input) {
 	x := Term.Cols / 3
 
+	Term.Cursor.Lock()
 	Term.Cursor.SavePos()
 	Term.Cursor.Invisible()
 
@@ -113,7 +116,7 @@ func (d *Debugger) PosAndLines(i *Input) {
 	Term.Cursor.RestorePos()
 	Term.Cursor.Y = old
 	Term.Cursor.Normal()
-
+	Term.Cursor.Unlock()
 }
 
 func (d *Debugger) MemStats(i *Input) {
@@ -122,6 +125,7 @@ func (d *Debugger) MemStats(i *Input) {
 	x := Term.Cols / 3
 	y := Term.Lines / 3
 
+	Term.Cursor.Lock()
 	Term.Cursor.SavePos()
 	Term.Cursor.Invisible()
 
@@ -139,4 +143,5 @@ func (d *Debugger) MemStats(i *Input) {
 
 	Term.Cursor.RestorePos()
 	Term.Cursor.Normal()
+	Term.Cursor.Unlock()
 }

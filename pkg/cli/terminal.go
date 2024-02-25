@@ -13,7 +13,7 @@ import (
 // a few other env vars.
 type Terminal struct {
 	IsRaw    bool
-	Cursor   Cursor
+	Cursor   *Cursor
 	OldState *term.State
 	Cols     int
 	Lines    int
@@ -21,6 +21,7 @@ type Terminal struct {
 
 func NewTerminal() *Terminal {
 	t := Terminal{}
+	t.Cursor = NewCursor()
 	t.IsRaw = false
 	t.Cols, t.Lines = size()
 	return &t
