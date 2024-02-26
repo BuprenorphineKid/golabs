@@ -11,6 +11,7 @@ and it really isnt all that bad*/
 
 import (
 	"labs/pkg/cli"
+	"labs/pkg/commandbar"
 	"os"
 	"reflect"
 	"strings"
@@ -204,11 +205,12 @@ func (f fbuf) filterInput(i *Input) {
 	done := make(chan struct{}, 0)
 
 	wg := &w
-	wg.Add(5)
+	wg.Add(6)
 
 	go func() {
 		go killCheck(i, wg)
 		go DebugCheck(i, wg)
+		go cmdCheck(i, wg)
 		go parseArrows(i, wg)
 		go otherSpecial(i, wg)
 		go regularChars(i, wg)
@@ -287,6 +289,19 @@ func parseArrows(i *Input, wg *sync.WaitGroup) {
 	i.Rbuf = rbuf("")
 
 	wg.Done()
+}
+
+func cmdCheck(i *Input, wg *sync.WaitGroup) {
+	if len(i.Fbuf) == 0 || string(i.Fbuf[0]) != "\x18" {
+		wg.Done()
+		return
+	}
+
+	cmdBar := commandbar.NewCommandBar(3, Term.Cols-1, 1, Term.Lines-3, "black", "sharp")
+	cmdBar.Display()
+
+	wg.Done()
+
 }
 
 // Filter through input byte for "Quit/Kill" KeyStroke: Ctrl-C.

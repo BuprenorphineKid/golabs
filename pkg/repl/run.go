@@ -2,7 +2,6 @@ package repl
 
 import (
 	"labs/pkg/cli"
-	"labs/pkg/commandbar"
 	"labs/pkg/eval"
 	"labs/pkg/readline"
 	"labs/pkg/scripts"
@@ -37,9 +36,6 @@ func Run() {
 
 	win.Fill()
 	win.Draw()
-
-	cmdBar := commandbar.NewCommandBar(3, term.Cols-1, 1, term.Lines-3, "black", "sharp")
-	cmdBar.Display()
 
 	scripter := scripts.NewHandler()
 	scripter.Run()
