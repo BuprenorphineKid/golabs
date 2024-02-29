@@ -30,6 +30,7 @@ type Input struct {
 	debugOff    chan struct{}
 	InDebug     bool
 	Debugger    *Debugger
+	InCmdBar    bool
 	ScrollCount int
 }
 
@@ -48,6 +49,7 @@ func NewInput(t *cli.Terminal) *Input {
 	i.Lines = make([]line, 1, Term.Lines)
 	i.Debugger = new(Debugger)
 	i.InDebug = false
+	i.InCmdBar = false
 	i.ScrollCount = 0
 
 	return &i

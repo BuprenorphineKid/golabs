@@ -11,7 +11,6 @@ and it really isnt all that bad*/
 
 import (
 	"labs/pkg/cli"
-	"labs/pkg/commandbar"
 	"os"
 	"reflect"
 	"strings"
@@ -297,8 +296,14 @@ func cmdCheck(i *Input, wg *sync.WaitGroup) {
 		return
 	}
 
-	cmdBar := commandbar.NewCommandBar(3, Term.Cols-1, 1, Term.Lines-3, "black", "sharp")
-	cmdBar.Display()
+	if i.InCmdBar {
+		i.InCmdBar = false
+	} else {
+		i.InCmdBar = true
+	}
+
+	// cmdBar := commandbar.NewCommandBar(3, Term.Cols-1, 1, Term.Lines-3, "black", "sharp")
+	// cmdBar.Display()
 
 	wg.Done()
 
