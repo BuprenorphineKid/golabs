@@ -6,6 +6,7 @@ import (
 	"labs/pkg/readline"
 	"labs/pkg/scripts"
 	"labs/pkg/window"
+	"sync"
 )
 
 // Singleton of Terminal.
@@ -13,6 +14,7 @@ var term = readline.Term
 
 // Singleton of Frame.
 var win = window.NewWindow(0, (term.Lines/3 + term.Lines/3), term.Lines/3, term.Cols, "grey", "thick")
+var usr = NewUser(term)
 
 // Instantiate objects, Start the main loop. This is the function
 // you use to start the application.
@@ -26,7 +28,6 @@ func Run() {
 	term.RawMode()
 	defer term.Normal()
 
-	usr := NewUser(term)
 	readline.Logo(usr.Input)
 
 	readline.Init()
@@ -42,10 +43,33 @@ func Run() {
 
 	rCh := make(chan eval.Report)
 
+	ctrlkeys := make(chan *sync.WaitGroup)
+
+	go func() {
+		for {
+			ctrl := <-usr.Input.Ctrlkey
+			var wg sync.WaitGroup
+			wg.Add(1)
+
+			ctrlkeys <- &wg
+
+			switch ctrl {
+			case "c":
+				ctrlC()
+			case "x":
+				ctrlX()
+			default:
+			}
+
+			wg.Done()
+		}
+	}()
+
 	go func() {
 
 		for {
-			TakeInput(usr, echo)
+
+			TakeInput(usr, echo, ctrlkeys)
 
 			ev := eval.NewEvaluator(usr.Lab.Main)
 			ev.Exec(rCh)
@@ -62,10 +86,8 @@ func Run() {
 
 			scrn.Wrap(info.Results)
 
-			if len(scrn.Buffer) > win.Height {
-				for i := 0; i > len(scrn.Buffer)-win.Height; i++ {
-					scrn.Scroll()
-				}
+			if len(scrn.Buffer) >= win.Height-2 {
+				scrn.Scroll()
 			}
 
 			GiveOutput(scrn)
@@ -98,11 +120,11 @@ func GiveOutput(out Outputter) {
 //
 // TakeInput() is to GetLine() what Give() is to
 // Display.RenderLine().
-func TakeInput(usr *User, echo *readline.Echo) {
+func TakeInput(usr *User, echo *readline.Echo, ctrl chan *sync.WaitGroup) {
 	if len(usr.Input.Lines) >= (term.Lines - (term.Lines / 3) - 1) {
 		usr.Input.Scroll()
 
-		input := readline.ReadLine(usr.Input)
+		input := readline.ReadLine(usr.Input, ctrl)
 
 		DetermCmd(usr, string(*input), usr.FileLock)
 
@@ -111,7 +133,7 @@ func TakeInput(usr *User, echo *readline.Echo) {
 
 	GiveOutput(echo)
 
-	input := readline.ReadLine(usr.Input)
+	input := readline.ReadLine(usr.Input, ctrl)
 
 	DetermCmd(usr, string(*input), usr.FileLock)
 }

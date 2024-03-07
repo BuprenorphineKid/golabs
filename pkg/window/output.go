@@ -9,9 +9,10 @@ import (
 )
 
 type Screen struct {
-	win    *Window
-	curs   *cli.Cursor
-	Buffer []string
+	win     *Window
+	curs    *cli.Cursor
+	Buffer  []string
+	history []string
 }
 
 func NewScreen(w *Window, c *cli.Cursor) *Screen {
@@ -28,7 +29,12 @@ func (s *Screen) Reset() {
 }
 
 func (s *Screen) Scroll() {
-	s.Buffer = s.Buffer[1:]
+
+	xs := len(s.Buffer) - (s.win.Height - 2)
+
+	s.history = s.Buffer[:xs]
+	s.Buffer = s.Buffer[xs:]
+
 	slices.Clip(s.Buffer)
 }
 
@@ -57,15 +63,13 @@ func (s *Screen) Wrap(buf string) {
 }
 
 func (s *Screen) TrimSpace() {
-	if len(s.Buffer) > 0 {
+	if len(s.Buffer) == 0 {
 		return
 	}
-	for _, v := range s.Buffer {
 
-		if strings.Contains(v, "\n") {
-			slices.Delete(s.Buffer, len(s.Buffer), len(s.Buffer))
-			slices.Clip(s.Buffer)
-		}
+	if s.Buffer[len(s.Buffer)] == "\n" {
+		slices.Delete(s.Buffer, len(s.Buffer), len(s.Buffer))
+		slices.Clip(s.Buffer)
 	}
 }
 

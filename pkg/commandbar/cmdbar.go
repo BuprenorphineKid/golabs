@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"labs/pkg/cli"
 	"labs/pkg/syntax"
+	"os"
 )
 
 type CommandBar struct {
@@ -44,4 +45,33 @@ func (c CommandBar) Display() {
 	case "cyan":
 		fmt.Print(syntax.OnCyan(syntax.Green(syntax.Italicized(" #Command# " + syntax.Magenta("<< ")))))
 	}
+}
+
+func (c *CommandBar) Read() string {
+	cX := c.x + 15
+	cY := c.y + 1
+	cursor.MoveTo(cX, cY)
+
+	r := os.Stdin
+
+	var buf [1]byte
+
+	input := make([]byte, 0)
+
+	for {
+
+		r.Read(buf[:])
+
+		if string(buf[:]) == "\r" || string(buf[:]) == "\x18" || string(buf[:]) == "\x03" {
+			break
+		}
+
+		fmt.Print(syntax.OnBlack[string](string(buf[:])))
+		cX++
+		cursor.MoveTo(cX, cY)
+
+		input = append(input, buf[0])
+
+	}
+	return string(input)
 }

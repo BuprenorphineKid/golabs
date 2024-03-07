@@ -25,12 +25,9 @@ type Input struct {
 	Spbuf       spbuf
 	Mvbuf       mvbuf
 	Fbuf        fbuf
+	Ctrlkey     chan string
 	Lines       []line
 	done        chan struct{}
-	debugOff    chan struct{}
-	InDebug     bool
-	Debugger    *Debugger
-	InCmdBar    bool
 	ScrollCount int
 }
 
@@ -46,10 +43,8 @@ func NewInput(t *cli.Terminal) *Input {
 	i.Spbuf = spbuf("")
 	i.Mvbuf = mvbuf("")
 	i.Fbuf = fbuf("")
+	i.Ctrlkey = make(chan string)
 	i.Lines = make([]line, 1, Term.Lines)
-	i.Debugger = new(Debugger)
-	i.InDebug = false
-	i.InCmdBar = false
 	i.ScrollCount = 0
 
 	return &i
@@ -145,15 +140,13 @@ func (i *Input) ScrollBack() {
 //
 // Start Input Loop that after its done reading input and
 // filling buffers, concurrently processes each.
-func ReadLine(i *Input) *line {
+func ReadLine(i *Input, ctrl chan *sync.WaitGroup) *line {
 	for {
-		if i.InDebug {
-			var dbwg sync.WaitGroup
-			dbwg.Add(1)
-			i.Debugger.Ready <- &dbwg
-			dbwg.Wait()
+		select {
+		case wg := <-ctrl:
+			wg.Wait()
+		default:
 		}
-
 		i.done = make(chan struct{}, 1)
 		i.read()
 

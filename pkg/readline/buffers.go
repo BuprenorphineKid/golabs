@@ -10,8 +10,6 @@ well put it to a little use lol. Anyway, just keep that in mind
 and it really isnt all that bad*/
 
 import (
-	"labs/pkg/cli"
-	"os"
 	"reflect"
 	"strings"
 	"sync"
@@ -204,15 +202,13 @@ func (f fbuf) filterInput(i *Input) {
 	done := make(chan struct{}, 0)
 
 	wg := &w
-	wg.Add(6)
+	wg.Add(4)
 
 	go func() {
-		go killCheck(i, wg)
-		go DebugCheck(i, wg)
-		go cmdCheck(i, wg)
 		go parseArrows(i, wg)
 		go otherSpecial(i, wg)
 		go regularChars(i, wg)
+		go ctrlkey(i, wg)
 
 		wg.Wait()
 		done <- struct{}{}
@@ -222,6 +218,77 @@ func (f fbuf) filterInput(i *Input) {
 	case <-done:
 		close(done)
 	}
+}
+
+func ctrlkey(i *Input, wg *sync.WaitGroup) {
+	switch string(i.Fbuf[0]) {
+	case "\x00":
+		i.Ctrlkey <- "@"
+	case "\x01":
+		i.Ctrlkey <- "a"
+	case "\x02":
+		i.Ctrlkey <- "b"
+	case "\x03":
+		i.Ctrlkey <- "c"
+	case "\x04":
+		i.Ctrlkey <- "d"
+	case "\x05":
+		i.Ctrlkey <- "e"
+	case "\x06":
+		i.Ctrlkey <- "f"
+	case "\x07":
+		i.Ctrlkey <- "g"
+	case "\x08":
+		i.Ctrlkey <- "h"
+	case "\x09":
+		i.Ctrlkey <- "i"
+	case "\x0a":
+		i.Ctrlkey <- "j"
+	case "\x0b":
+		i.Ctrlkey <- "k"
+	case "\x0c":
+		i.Ctrlkey <- "l"
+	case "\x0d":
+		i.Ctrlkey <- "m"
+	case "\x0e":
+		i.Ctrlkey <- "n"
+	case "\x0f":
+		i.Ctrlkey <- "o"
+	case "\x10":
+		i.Ctrlkey <- "p"
+	case "\x11":
+		i.Ctrlkey <- "q"
+	case "\x12":
+		i.Ctrlkey <- "r"
+	case "\x13":
+		i.Ctrlkey <- "s"
+	case "\x14":
+		i.Ctrlkey <- "t"
+	case "\x15":
+		i.Ctrlkey <- "u"
+	case "\x16":
+		i.Ctrlkey <- "v"
+	case "\x17":
+		i.Ctrlkey <- "w"
+	case "\x18":
+		i.Ctrlkey <- "x"
+	case "\x19":
+		i.Ctrlkey <- "y"
+	case "\x1a":
+		i.Ctrlkey <- "z"
+	case "\x1b":
+		i.Ctrlkey <- "["
+	case "\x1c":
+		i.Ctrlkey <- "\\"
+	case "\x1d":
+		i.Ctrlkey <- "]"
+	case "\x1e":
+		i.Ctrlkey <- "*"
+	case "\x1f":
+		i.Ctrlkey <- "_"
+	}
+
+	wg.Done()
 }
 
 // Filter through in!put bytes for "Special" KeyStrokes: NL, CR, Home,
@@ -286,59 +353,6 @@ func parseArrows(i *Input, wg *sync.WaitGroup) {
 	}
 
 	i.Rbuf = rbuf("")
-
-	wg.Done()
-}
-
-func cmdCheck(i *Input, wg *sync.WaitGroup) {
-	if len(i.Fbuf) == 0 || string(i.Fbuf[0]) != "\x18" {
-		wg.Done()
-		return
-	}
-
-	if i.InCmdBar {
-		i.InCmdBar = false
-	} else {
-		i.InCmdBar = true
-	}
-
-	// cmdBar := commandbar.NewCommandBar(3, Term.Cols-1, 1, Term.Lines-3, "black", "sharp")
-	// cmdBar.Display()
-
-	wg.Done()
-
-}
-
-// Filter through input byte for "Quit/Kill" KeyStroke: Ctrl-C.
-func killCheck(i *Input, wg *sync.WaitGroup) {
-	if len(i.Fbuf) == 0 || string(i.Fbuf[0]) != "\x03" {
-		wg.Done()
-		return
-	}
-
-	Term.Normal()
-	cli.Restore()
-	os.Exit(0)
-}
-
-// Filter through input byte for "Debug" KeyStroke: Ctrl-B.
-func DebugCheck(i *Input, wg *sync.WaitGroup) {
-	if len(i.Fbuf) == 0 || string(i.Fbuf[0]) != "\x02" {
-		wg.Done()
-		return
-	}
-
-	if i.InDebug {
-		i.Debugger.Off <- struct{}{}
-		i.Debugger = new(Debugger)
-		i.InDebug = false
-	} else {
-		i.Debugger = NewDebugger()
-
-		go i.Debugger.DebugMode(i)
-
-		i.InDebug = true
-	}
 
 	wg.Done()
 }

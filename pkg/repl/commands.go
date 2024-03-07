@@ -20,6 +20,17 @@ func DetermCmd(usr *User, inp string, m sync.Locker) {
 
 }
 
+func ExecuteCmd(usr *User, inp string) {
+	switch inp {
+	case "!save":
+		Save()
+	case "!help":
+		go Help()
+	default:
+	}
+
+}
+
 func Save() {
 	fmt.Print("Save File?\nno/Yes :")
 
@@ -64,5 +75,5 @@ func Save() {
 }
 
 func Help() {
-	fmt.Println("Commands\n\r________\n\r';eval'  -  evaluate and print output of code so far\n\r';save'  -  save all of which you have just written to a new or existing File\n\r';help'  -  print this help message\n\r")
+	fmt.Println("Commands\n\r________\n\r';save'  -  save all of which you have just written to a new or existing File\n\r';help'  -  print this help message\n\r")
 }
