@@ -22,7 +22,7 @@ type User struct {
 func NewUser(t *cli.Terminal) *User {
 	var u User
 
-	u.Input = readline.NewInput(t)
+	u.Input = readline.NewInput()
 	u.Lab = labs.NewLab()
 
 	u.FileLock = new(sync.Mutex)

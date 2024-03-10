@@ -64,7 +64,6 @@ type Display interface {
 	RenderLine()
 	PrintBuffer()
 	PrintInPrompt()
-	PrintOutPrompt()
 	PrintAndPrompt(*[]line, int)
 }
 
@@ -138,17 +137,6 @@ func (s *Screen) PrintAndPrompt(ln *[]line, depth int) {
 		Term.Cursor.AddX(4)
 		s.RenderLine()
 	}
-
-	Term.Cursor.Normal()
-}
-
-func (s *Screen) PrintOutPrompt() {
-	Term.Cursor.Invisible()
-
-	Term.Cursor.MoveTo(len(INPROMPT)-len(OUTPROMPT), Term.Cursor.GetY())
-	fmt.Print(COUTPROMPT)
-	Term.Cursor.MoveTo(len(INPROMPT), Term.Cursor.GetY())
-	Term.Cursor.SetX(len(INPROMPT))
 
 	Term.Cursor.Normal()
 }

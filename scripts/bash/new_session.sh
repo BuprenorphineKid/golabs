@@ -1,14 +1,17 @@
 #!/bin/bash
 # Bash script for creating a new empty session.
 
-dir=$(dirname $0)
-tmp="$dir/../.labs/template"
-session="$dir/../.labs/session/lab.go"
+
+tmp="$HOME/.labs/template"
+session="$HOME/.labs/session/lab.go"
+eval="$HOME/.labs/session/eval.go"
 
 if [[ ! -e $tmp ]]
+then
 	touch $tmp
-	echo "package main\n\nimport(\n\n)\n\nfunc main() {\n\n}\n" >> $tmp
+	echo "package main\n\n\nimport(\n\n)\n\n\nfunc main() {\n\n\n}\n" >> $tmp
 fi
 
-rm -f $session
+rm -f $session $eval
 cp $tmp $session
+cp $tmp $eval

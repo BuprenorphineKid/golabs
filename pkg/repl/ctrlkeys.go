@@ -6,6 +6,12 @@ import (
 	"os"
 )
 
+const (
+	WAIT = iota
+	RESUME
+	KILL
+)
+
 func ctrlB() {
 
 }
@@ -32,8 +38,8 @@ func cmdbar() {
 	c.Display()
 	cmd := c.Read()
 
-	win.Fill()
-	win.Draw()
+	scrn.Win.Fill()
+	scrn.Win.Draw()
 
 	ExecuteCmd(usr, cmd)
 }

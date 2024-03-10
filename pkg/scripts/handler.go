@@ -64,6 +64,7 @@ func (s *Handler) Run() {
 			select {
 			case f := <-s.Do:
 				err := f()
+				return
 				if err != nil {
 					cli.Restore()
 					log.Fatalf(

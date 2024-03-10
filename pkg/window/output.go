@@ -9,7 +9,7 @@ import (
 )
 
 type Screen struct {
-	win     *Window
+	Win     *Window
 	curs    *cli.Cursor
 	Buffer  []string
 	history []string
@@ -17,7 +17,7 @@ type Screen struct {
 
 func NewScreen(w *Window, c *cli.Cursor) *Screen {
 	s := Screen{}
-	s.win = w
+	s.Win = w
 	s.curs = c
 	s.Buffer = make([]string, 0, 0)
 
@@ -30,7 +30,7 @@ func (s *Screen) Reset() {
 
 func (s *Screen) Scroll() {
 
-	xs := len(s.Buffer) - (s.win.Height - 2)
+	xs := len(s.Buffer) - (s.Win.Height - 2)
 
 	s.history = s.Buffer[:xs]
 	s.Buffer = s.Buffer[xs:]
@@ -44,7 +44,7 @@ func (s *Screen) Wrap(buf string) {
 		out := strings.Split(buf, "\n")
 
 		for _, v := range out {
-			w := s.win.Width
+			w := s.Win.Width
 
 			if len(v) > w {
 				s.Buffer = append(s.Buffer, syntax.OnGrey(syntax.White(v[:w])))
@@ -74,10 +74,10 @@ func (s *Screen) TrimSpace() {
 }
 
 func (s *Screen) Display() {
-	s.win.Fill()
+	s.Win.Fill()
 
-	ycurs := s.win.Y + 1
-	xcurs := s.win.X + 3
+	ycurs := s.Win.Y + 1
+	xcurs := s.Win.X + 3
 
 	for _, v := range s.Buffer {
 		s.curs.MoveTo(xcurs, ycurs)
@@ -85,7 +85,7 @@ func (s *Screen) Display() {
 		fmt.Println(v)
 		ycurs++
 	}
-	s.win.Draw()
+	s.Win.Draw()
 
 	s.Reset()
 }

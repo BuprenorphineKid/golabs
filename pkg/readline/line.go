@@ -1,13 +1,18 @@
 package readline
 
+type ReturnLine struct {
+	Line *line
+	Pos  int
+}
+
 // Custom string type to represent the inner line buffer that gets
 // sent around and evaluated and what not. The lines should always
 // directly mimic the lines on the screen.
 type line string
 
 // Line method for deleting a character behind the cursor when the
-// the Backspace button is preased.
-func (l *line) Backspace(xpos int) line {
+// the backspace button is preased.
+func (l *line) backspace(xpos int) line {
 	if xpos-1 <= 0 {
 		return *l
 	}
@@ -30,7 +35,7 @@ func (l *line) Backspace(xpos int) line {
 
 // Line method used to delete a character that the cursor is highliting
 // whenever the del button is pressed.
-func (l *line) DelChar(xpos int) line {
+func (l *line) del(xpos int) line {
 	if (xpos-1)-len(INPROMPT)+1 > len(*l)-1 {
 		return *l
 	}
@@ -97,11 +102,11 @@ func (l *line) Tab(xpos int) line {
 // Use this method if you want to insert a character into the text
 // inside the line without overwriting other pre-existing
 // characters.
-func (l *line) Insert(char []byte, xpos int) line {
+func (l *line) insert(char []byte, xpos int) line {
 	var pos int
 
 	if (xpos-1)-len(INPROMPT) <= 0 {
-		return l.Write(char, xpos)
+		return l.write(char, xpos)
 	} else {
 		pos = (xpos - 1) - len(INPROMPT)
 	}
@@ -124,9 +129,9 @@ func (l *line) Insert(char []byte, xpos int) line {
 
 // Only use this method for the start of a line where deciding the
 // cutting positions would cause a panic.
-func (l *line) Write(char []byte, xpos int) line {
+func (l *line) write(char []byte, xpos int) line {
 	if (xpos-1)-len(INPROMPT) > 0 {
-		return l.Insert(char, xpos)
+		return l.insert(char, xpos)
 	}
 
 	return line(append([]byte(*l), char...))

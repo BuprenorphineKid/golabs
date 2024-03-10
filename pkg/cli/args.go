@@ -56,7 +56,7 @@ func writeTemplate() []byte {
 
 	os.Mkdir(h+"/.labs", 0777)
 
-	data := "package main\n\nimport(\n\n)\n\nfunc main() {\n\n}\n"
+	data := "package main\n\n\nimport(\n\n)\n\n\nfunc main() {\n\n\n}\n"
 
 	os.WriteFile(h+"/.labs/template", []byte(data), 0777)
 	return []byte(data)

@@ -16,7 +16,7 @@ func NewHistory() *History {
 }
 
 // Increment CmdCount and add desired command to Hist.
-func (h *History) AddCmd(cmd string) {
+func (h *History) Add(cmd string) {
 	h.Entries = append(h.Entries, cmd)
 	h.count++
 	h.Last = &h.Entries[len(h.Entries)-1]

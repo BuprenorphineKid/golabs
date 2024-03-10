@@ -3,17 +3,19 @@ package repl
 import (
 	"labs/pkg/cli"
 	"labs/pkg/eval"
+	"labs/pkg/labs"
 	"labs/pkg/readline"
-	"labs/pkg/scripts"
 	"labs/pkg/window"
-	"sync"
+	"os"
 )
+
+var home, _ = os.UserHomeDir()
 
 // Singleton of Terminal.
 var term = readline.Term
 
 // Singleton of Frame.
-var win = window.NewWindow(0, (term.Lines/3 + term.Lines/3), term.Lines/3, term.Cols, "grey", "thick")
+var scrn = window.NewScreen(window.NewWindow(0, (term.Lines/3+term.Lines/3), term.Lines/3, term.Cols, "grey", "thick"), term.Cursor)
 var usr = NewUser(term)
 
 // Instantiate objects, Start the main loop. This is the function
@@ -22,36 +24,20 @@ func Run() {
 	cli.Ready()
 	defer cli.Restore()
 
-	win.LoadScreen()
-
-	term.Clear()
 	term.RawMode()
 	defer term.Normal()
 
-	readline.Logo(usr.Input)
+	term.Clear()
 
-	readline.Init()
-
-	scrn := window.NewScreen(win, term.Cursor)
-	echo := readline.NewEcho(usr.Lab, usr.Input)
-
-	win.Fill()
-	win.Draw()
-
-	scripter := scripts.NewHandler()
-	scripter.Run()
+	InitializeUI()
 
 	rCh := make(chan eval.Report)
-
-	ctrlkeys := make(chan *sync.WaitGroup)
 
 	go func() {
 		for {
 			ctrl := <-usr.Input.Ctrlkey
-			var wg sync.WaitGroup
-			wg.Add(1)
 
-			ctrlkeys <- &wg
+			usr.Input.CntrlCode <- WAIT
 
 			switch ctrl {
 			case "c":
@@ -61,15 +47,17 @@ func Run() {
 			default:
 			}
 
-			wg.Done()
+			usr.Input.CntrlCode <- RESUME
+
 		}
 	}()
 
 	go func() {
 
 		for {
+			echo := readline.NewEcho(usr.Lab, usr.Input)
 
-			TakeInput(usr, echo, ctrlkeys)
+			TakeInput(echo)
 
 			ev := eval.NewEvaluator(usr.Lab.Main)
 			ev.Exec(rCh)
@@ -86,7 +74,7 @@ func Run() {
 
 			scrn.Wrap(info.Results)
 
-			if len(scrn.Buffer) >= win.Height-2 {
+			if len(scrn.Buffer) >= scrn.Win.Height-2 {
 				scrn.Scroll()
 			}
 
@@ -120,20 +108,31 @@ func GiveOutput(out Outputter) {
 //
 // TakeInput() is to GetLine() what Give() is to
 // Display.RenderLine().
-func TakeInput(usr *User, echo *readline.Echo, ctrl chan *sync.WaitGroup) {
+func TakeInput(echo *readline.Echo) {
 	if len(usr.Input.Lines) >= (term.Lines - (term.Lines / 3) - 1) {
 		usr.Input.Scroll()
 
-		input := readline.ReadLine(usr.Input, ctrl)
+		input := readline.ReadLine(usr.Input)
+		if input == nil {
+			return
+		}
 
-		DetermCmd(usr, string(*input), usr.FileLock)
+		labs.DetermDecl(usr.Lab, string(*input.Line), usr.FileLock)
 
 		return
 	}
 
 	GiveOutput(echo)
 
-	input := readline.ReadLine(usr.Input, ctrl)
+	input := readline.ReadLine(usr.Input)
+	if input == nil {
+		return
+	}
 
-	DetermCmd(usr, string(*input), usr.FileLock)
+	if input.Pos != len(usr.Input.Lines)-2 {
+		usr.Lab.Replace(string(*input.Line), input.Pos)
+		return
+	}
+
+	labs.DetermDecl(usr.Lab, string(*input.Line), usr.FileLock)
 }

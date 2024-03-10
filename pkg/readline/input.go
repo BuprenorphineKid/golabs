@@ -28,11 +28,12 @@ type Input struct {
 	Ctrlkey     chan string
 	Lines       []line
 	done        chan struct{}
+	CntrlCode   chan int
 	ScrollCount int
 }
 
 // Constructor function for the Input Output struct.
-func NewInput(t *cli.Terminal) *Input {
+func NewInput() *Input {
 	i := Input{
 		writer: os.Stdout,
 		reader: os.Stdin,
@@ -45,6 +46,7 @@ func NewInput(t *cli.Terminal) *Input {
 	i.Fbuf = fbuf("")
 	i.Ctrlkey = make(chan string)
 	i.Lines = make([]line, 1, Term.Lines)
+	i.CntrlCode = make(chan int)
 	i.ScrollCount = 0
 
 	return &i
@@ -54,7 +56,15 @@ func NewInput(t *cli.Terminal) *Input {
 func (i *Input) AddLines(n int) {
 	newlines := make([]line, n, n)
 
-	i.Lines = append(i.Lines, newlines...)
+	if Term.Cursor.Y >= len(i.Lines) {
+		i.Lines = append(i.Lines, newlines...)
+	} else {
+		f := i.Lines[:Term.Cursor.Y]
+		f = append(f, newlines...)
+		b := i.Lines[Term.Cursor.Y:]
+		i.Lines = append(i.Lines, b...)
+	}
+
 }
 
 // The read method is used for recieving one byte of input at a
@@ -101,7 +111,7 @@ func (i *Input) write(buf []byte) {
 		return
 	}
 
-	i.Lines[len(i.Lines)-1] = i.Lines[len(i.Lines)-1].Insert(buf, Term.Cursor.X)
+	i.Lines[Term.Cursor.Y] = i.Lines[Term.Cursor.Y].insert(buf, Term.Cursor.X)
 }
 
 func (i *Input) Scroll() {
@@ -140,13 +150,23 @@ func (i *Input) ScrollBack() {
 //
 // Start Input Loop that after its done reading input and
 // filling buffers, concurrently processes each.
-func ReadLine(i *Input, ctrl chan *sync.WaitGroup) *line {
+func ReadLine(i *Input) *ReturnLine {
 	for {
 		select {
-		case wg := <-ctrl:
-			wg.Wait()
+		case code := <-i.CntrlCode:
+			if code == 0 {
+				select {
+				case c := <-i.CntrlCode:
+					switch c {
+					case 1:
+					case 2:
+						return nil
+					}
+				}
+			}
 		default:
 		}
+
 		i.done = make(chan struct{}, 1)
 		i.read()
 
@@ -158,12 +178,15 @@ func ReadLine(i *Input, ctrl chan *sync.WaitGroup) *line {
 
 		nlwg.Wait()
 
-		out.SetLine(string(i.Lines[len(i.Lines)-1]))
+		out.SetLine(string(i.Lines[Term.Cursor.Y]))
 		out.Devices["main"].(Display).RenderLine()
 
 		select {
 		case <-i.done:
-			return &i.Lines[len(i.Lines)-2]
+			return &ReturnLine{
+				&i.Lines[Term.Cursor.Y-1],
+				Term.Cursor.Y - 6,
+			}
 		default:
 			continue
 		}

@@ -5,7 +5,6 @@ import (
 	"io"
 	"os"
 	"strings"
-	"sync"
 )
 
 // content struct
@@ -59,7 +58,7 @@ type Lab struct {
 	ImportLine int
 	InBody     bool
 	Depth      int
-	*History
+	History    *History
 }
 
 // Lab Constructor
@@ -72,57 +71,26 @@ func NewLab() *Lab {
 	l.Depth = 0
 	l.History = NewHistory()
 
-	var (
-		ich  = make(chan int)
-		mch  = make(chan int)
-		done = make(chan struct{})
-		wg   sync.WaitGroup
-	)
-
-	wg.Add(2)
-
-	go func() {
+	func() {
 		for i, s := range l.Lines {
-			if s == "func main() {" {
-				mch <- i
-				wg.Done()
+			if strings.HasPrefix(s, "func main()") {
+				l.MainLine = i + 1
 				return
 			}
 		}
 	}()
 
-	go func() {
+	func() {
 		for i, s := range l.Lines {
 			if strings.HasPrefix(s, "import") {
-				ich <- i
-				wg.Done()
+				l.ImportLine = i
 				return
-			} else if i == len(l.Lines)-1 {
-				wg.Done()
-				done <- struct{}{}
 			}
 		}
 	}()
 
-loop:
-	for {
-		select {
-		case l.MainLine = <-mch:
-			continue
-		case l.ImportLine = <-ich:
-			continue
-		case <-done:
-			wg.Wait()
-			break loop
-		default:
-		}
-
-		if l.MainLine > 0 && l.ImportLine > 0 {
-			break loop
-		}
-	}
-
 	return &l
+
 }
 
 // Write the Template for session
@@ -132,7 +100,7 @@ func writeTemplate() []byte {
 
 	h, _ := os.UserHomeDir()
 
-	data := "package main\n\nimport(\n\n)\n\nfunc main() {\n\n}\n"
+	data := "package main\n\n\nimport(\n\n)\n\n\nfunc main() {\n\n\n}\n"
 
 	os.WriteFile(h+"/.labs/template", []byte(data), 0777)
 
@@ -188,6 +156,29 @@ func InsertString(path, str string, index int) error {
 		fileContent += line
 		fileContent += "\n"
 
+	}
+
+	return os.WriteFile(path, []byte(fileContent), 0644)
+}
+
+func Replace(path string, str string, index int) error {
+	lines, err := file2lines(path)
+	if err != nil {
+		panic(err)
+	}
+
+	replacenent := strings.TrimSpace(str) + "\n"
+
+	var fileContent string
+
+	for k, v := range lines {
+		if k == index {
+			fileContent += replacenent
+			continue
+		}
+
+		fileContent += v
+		fileContent += "\n"
 	}
 
 	return os.WriteFile(path, []byte(fileContent), 0644)

@@ -24,15 +24,20 @@ func DetermDecl(lab *Lab, inp string, m sync.Locker) {
 	case strings.HasPrefix(inp, "func"):
 		Func(lab, inp)
 	default:
-		AddToMain(lab, inp)
+		lab.Add(inp)
 	}
 
 }
 
-func AddToMain(lab *Lab, inp string) {
-	InsertString(lab.Main, inp+"\n", lab.MainLine+lab.count)
+func (lab *Lab) Add(inp string) {
+	InsertString(lab.Main, inp+"\n", lab.MainLine+lab.History.count)
 
-	lab.AddCmd(inp)
+	lab.History.Add(inp)
+}
+
+func (lab *Lab) Replace(inp string, pos int) {
+	Replace(lab.Main, inp+"\n", lab.MainLine+pos)
+
 }
 
 func Import(lab *Lab, s string) {
@@ -45,7 +50,7 @@ func Import(lab *Lab, s string) {
 		return f + "\n"
 	}()
 
-	InsertString(lab.Main, final, lab.ImportLine+1)
+	InsertString(lab.Main, final, lab.ImportLine)
 	lab.MainLine++
 }
 
@@ -56,14 +61,14 @@ func Type(lab *Lab, s string) {
 
 	if parts[1] == "struct" || parts[1] == "interface" {
 		dec := fmt.Sprintf("type %s %s {\n", parts[0], parts[1])
-		InsertString(lab.Main, dec, lab.MainLine)
+		InsertString(lab.Main, dec, lab.MainLine-1)
 
 		lab.InBody = true
 		lab.Depth++
 		lab.MainLine++
 	} else {
 		dec := fmt.Sprintf("type %s %s{}\n", parts[0], parts[1])
-		InsertString(lab.Main, dec, lab.MainLine)
+		InsertString(lab.Main, dec, lab.MainLine-1)
 		lab.MainLine++
 	}
 }
@@ -75,7 +80,7 @@ func Func(lab *Lab, s string) {
 
 	decl := fmt.Sprintf("func %s %s%s %s {\n", parts[0], parts[1], parts[2], parts[3])
 
-	InsertString(lab.Main, decl, lab.MainLine)
+	InsertString(lab.Main, decl, lab.MainLine-1)
 	lab.MainLine++
 	lab.InBody = true
 	lab.Depth++
@@ -99,7 +104,7 @@ func Body(lab *Lab, bodyLine string) {
 		space += "    "
 	}
 
-	InsertString(lab.Main, space+strings.TrimLeft(bodyLine+"\n", " "), lab.MainLine)
+	InsertString(lab.Main, space+strings.TrimLeft(bodyLine+"\n", " "), lab.MainLine-1)
 	lab.MainLine++
 
 	if lab.Depth <= 0 {
