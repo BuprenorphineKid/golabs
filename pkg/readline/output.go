@@ -2,7 +2,7 @@ package readline
 
 import (
 	"fmt"
-	"labs/pkg/labs"
+	"github.com/BuprenorphineKid/golabs/pkg/labs"
 )
 
 // output Subject object for an observer pattern in which the output obj will

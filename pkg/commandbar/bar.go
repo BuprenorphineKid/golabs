@@ -2,7 +2,7 @@ package commandbar
 
 import (
 	"fmt"
-	"labs/pkg/window"
+	"github.com/BuprenorphineKid/golabs/pkg/window"
 	"os"
 	"os/exec"
 )

@@ -2,8 +2,8 @@ package window
 
 import (
 	"fmt"
-	"labs/pkg/cli"
-	"labs/pkg/syntax"
+	"github.com/BuprenorphineKid/golabs/pkg/cli"
+	"github.com/BuprenorphineKid/golabs/pkg/syntax"
 )
 
 type Window struct {

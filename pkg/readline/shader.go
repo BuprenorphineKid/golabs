@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"strings"
 
-	"labs/pkg/syntax"
+	"github.com/BuprenorphineKid/golabs/pkg/syntax"
 )
 
 type Shader interface {

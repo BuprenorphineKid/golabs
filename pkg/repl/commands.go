@@ -3,7 +3,7 @@ package repl
 import (
 	"bufio"
 	"fmt"
-	"labs/pkg/scripts"
+	"github.com/BuprenorphineKid/golabs/pkg/scripts"
 	"os"
 )
 

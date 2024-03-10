@@ -28,7 +28,7 @@
 package scripts
 
 import (
-	"labs/pkg/cli"
+	"github.com/BuprenorphineKid/golabs/pkg/cli"
 	"log"
 	"os/exec"
 	"runtime/debug"

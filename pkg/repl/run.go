@@ -1,11 +1,11 @@
 package repl
 
 import (
-	"labs/pkg/cli"
-	"labs/pkg/eval"
-	"labs/pkg/labs"
-	"labs/pkg/readline"
-	"labs/pkg/window"
+	"github.com/BuprenorphineKid/golabs/pkg/cli"
+	"github.com/BuprenorphineKid/golabs/pkg/eval"
+	"github.com/BuprenorphineKid/golabs/pkg/labs"
+	"github.com/BuprenorphineKid/golabs/pkg/readline"
+	"github.com/BuprenorphineKid/golabs/pkg/window"
 	"os"
 )
 

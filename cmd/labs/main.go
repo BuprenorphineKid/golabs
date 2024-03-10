@@ -1,8 +1,8 @@
 package main
 
 import (
-	"labs/pkg/cli"
-	"labs/pkg/repl"
+	"github.com/BuprenorphineKid/golabs/pkg/cli"
+	"github.com/BuprenorphineKid/golabs/pkg/repl"
 )
 
 func main() {

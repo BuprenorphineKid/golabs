@@ -2,7 +2,7 @@ package eval
 
 import (
 	"fmt"
-	"labs/pkg/cli"
+	"github.com/BuprenorphineKid/golabs/pkg/cli"
 	"log"
 	"os"
 	"os/exec"

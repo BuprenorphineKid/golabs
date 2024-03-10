@@ -1,7 +1,7 @@
 package repl
 
 import (
-	"labs/pkg/readline"
+	"github.com/BuprenorphineKid/golabs/pkg/readline"
 )
 
 func InitializeUI() {

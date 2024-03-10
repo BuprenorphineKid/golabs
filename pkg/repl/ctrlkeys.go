@@ -1,8 +1,8 @@
 package repl
 
 import (
-	"labs/pkg/cli"
-	"labs/pkg/commandbar"
+	"github.com/BuprenorphineKid/golabs/pkg/cli"
+	"github.com/BuprenorphineKid/golabs/pkg/commandbar"
 	"os"
 )
 

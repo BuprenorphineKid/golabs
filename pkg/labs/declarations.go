@@ -2,7 +2,7 @@ package labs
 
 import (
 	"fmt"
-	"labs/pkg/syntax"
+	"github.com/BuprenorphineKid/golabs/pkg/syntax"
 	"strings"
 	"sync"
 )

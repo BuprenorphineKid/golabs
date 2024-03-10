@@ -1,9 +1,9 @@
 package repl
 
 import (
-	"labs/pkg/cli"
-	"labs/pkg/labs"
-	"labs/pkg/readline"
+	"github.com/BuprenorphineKid/golabs/pkg/cli"
+	"github.com/BuprenorphineKid/golabs/pkg/labs"
+	"github.com/BuprenorphineKid/golabs/pkg/readline"
 	"sync"
 )
 

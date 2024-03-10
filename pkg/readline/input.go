@@ -7,7 +7,7 @@ import (
 	"strings"
 	"sync"
 
-	"labs/pkg/cli"
+	"github.com/BuprenorphineKid/golabs/pkg/cli"
 )
 
 const ()
