@@ -56,15 +56,15 @@ func NewInput() *Input {
 func (i *Input) AddLines(n int) {
 	newlines := make([]line, n, n)
 
-	if Term.Cursor.Y >= len(i.Lines) {
-		i.Lines = append(i.Lines, newlines...)
-	} else {
-		f := i.Lines[:Term.Cursor.Y]
-		f = append(f, newlines...)
-		b := i.Lines[Term.Cursor.Y:]
-		i.Lines = append(i.Lines, b...)
+	for i := range newlines {
+		newlines[i] = ""
 	}
 
+	if Term.Cursor.Y < len(i.Lines) {
+		return
+	}
+
+	i.Lines = append(i.Lines, newlines...)
 }
 
 // The read method is used for recieving one byte of input at a
@@ -111,7 +111,7 @@ func (i *Input) write(buf []byte) {
 		return
 	}
 
-	i.Lines[Term.Cursor.Y] = i.Lines[Term.Cursor.Y].insert(buf, Term.Cursor.X)
+	i.Lines[Term.Cursor.Y-1] = i.Lines[Term.Cursor.Y-1].insert(buf, Term.Cursor.X)
 }
 
 func (i *Input) Scroll() {
@@ -178,18 +178,16 @@ func ReadLine(i *Input) *ReturnLine {
 
 		nlwg.Wait()
 
-		out.SetLine(string(i.Lines[Term.Cursor.Y]))
-		out.Devices["main"].(Display).RenderLine()
-
 		select {
 		case <-i.done:
 			return &ReturnLine{
-				&i.Lines[Term.Cursor.Y-1],
-				Term.Cursor.Y - 6,
+				&i.Lines[Term.Cursor.Y-2],
+				Term.Cursor.Y - 5,
 			}
 		default:
-			continue
+			out.SetLine(string(i.Lines[Term.Cursor.Y-1]))
 		}
+		out.Devices["main"].(Display).RenderLine()
 
 	}
 }

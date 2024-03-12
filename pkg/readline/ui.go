@@ -20,7 +20,7 @@ func Logo(i *Input) {
 	print(CLOGO)
 
 	Term.Cursor.AddY(len(strings.Split(LOGO, "\n\r")) + 1)
-	i.AddLines(len(strings.Split(LOGO, "\n\r")) + 1)
+	i.AddLines(len(strings.Split(LOGO, "\n\r")))
 }
 
 func Backspace() {

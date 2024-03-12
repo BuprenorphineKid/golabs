@@ -81,7 +81,7 @@ func ResetCmd() {
 	scrn.Buffer = make([]string, 0)
 
 	usr.Input.CntrlCode <- 2
-	usr = NewUser(term)
+	usr = NewUser()
 
 	InitializeUI()
 

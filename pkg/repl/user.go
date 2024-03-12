@@ -1,10 +1,10 @@
 package repl
 
 import (
-	"github.com/BuprenorphineKid/golabs/pkg/cli"
+	"sync"
+
 	"github.com/BuprenorphineKid/golabs/pkg/labs"
 	"github.com/BuprenorphineKid/golabs/pkg/readline"
-	"sync"
 )
 
 // User Struct for keeping count of Hist CmdCount, yada yada.
@@ -19,7 +19,7 @@ type User struct {
 }
 
 // Creates a new User object and returns a pointer to it.
-func NewUser(t *cli.Terminal) *User {
+func NewUser() *User {
 	var u User
 
 	u.Input = readline.NewInput()

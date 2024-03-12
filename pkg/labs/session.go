@@ -146,7 +146,7 @@ func InsertString(path, str string, index int) error {
 		return err
 	}
 
-	fileContent := ""
+	var fileContent string
 
 	for i, line := range lines {
 		if i == index {
@@ -171,13 +171,13 @@ func Replace(path string, str string, index int) error {
 
 	var fileContent string
 
-	for k, v := range lines {
-		if k == index {
+	for i, line := range lines {
+		if i == index {
 			fileContent += replacenent
 			continue
 		}
 
-		fileContent += v
+		fileContent += line
 		fileContent += "\n"
 	}
 

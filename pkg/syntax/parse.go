@@ -24,7 +24,7 @@ func FuncParts(s string) []string {
 
 func TypeParts(s string) []string {
 	name := regexp.MustCompile(`^\b.+?\b`)
-	typ := regexp.MustCompile(`\s.+?$`)
+	typ := regexp.MustCompile(`\s.+\b\s?\{?\}?$`)
 
 	n := strings.TrimSpace(name.FindString(s))
 	t := strings.TrimSpace(typ.FindString(s))

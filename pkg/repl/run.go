@@ -1,22 +1,26 @@
 package repl
 
 import (
+	"os"
+
 	"github.com/BuprenorphineKid/golabs/pkg/cli"
 	"github.com/BuprenorphineKid/golabs/pkg/eval"
 	"github.com/BuprenorphineKid/golabs/pkg/labs"
 	"github.com/BuprenorphineKid/golabs/pkg/readline"
 	"github.com/BuprenorphineKid/golabs/pkg/window"
-	"os"
 )
 
 var home, _ = os.UserHomeDir()
+
+//DEBUG
+// var dbgCh = make(chan int, 2)
 
 // Singleton of Terminal.
 var term = readline.Term
 
 // Singleton of Frame.
 var scrn = window.NewScreen(window.NewWindow(0, (term.Lines/3+term.Lines/3), term.Lines/3, term.Cols, "grey", "thick"), term.Cursor)
-var usr = NewUser(term)
+var usr = NewUser()
 
 // Instantiate objects, Start the main loop. This is the function
 // you use to start the application.
@@ -33,6 +37,8 @@ func Run() {
 
 	rCh := make(chan eval.Report)
 
+	//DEBUGMODE
+
 	go func() {
 		for {
 			ctrl := <-usr.Input.Ctrlkey
@@ -42,6 +48,8 @@ func Run() {
 			switch ctrl {
 			case "c":
 				ctrlC()
+			case "b":
+				ctrlB()
 			case "x":
 				ctrlX()
 			default:
@@ -55,6 +63,7 @@ func Run() {
 	go func() {
 
 		for {
+
 			echo := readline.NewEcho(usr.Lab, usr.Input)
 
 			TakeInput(echo)
@@ -128,11 +137,17 @@ func TakeInput(echo *readline.Echo) {
 	if input == nil {
 		return
 	}
+	// DEBUG
+	// dbgCh <- input.Pos
 
-	if input.Pos != len(usr.Input.Lines)-2 {
-		usr.Lab.Replace(string(*input.Line), input.Pos)
+	uLines := usr.Input.Lines[4:]
+	ul := len(uLines)
+
+	if input.Pos == ul {
+		labs.DetermDecl(usr.Lab, string(*input.Line), usr.FileLock)
+		usr.Input.AddLines(1)
 		return
 	}
+	usr.Lab.Replace(string(*input.Line), input.Pos)
 
-	labs.DetermDecl(usr.Lab, string(*input.Line), usr.FileLock)
 }

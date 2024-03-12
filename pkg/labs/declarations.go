@@ -36,7 +36,7 @@ func (lab *Lab) Add(inp string) {
 }
 
 func (lab *Lab) Replace(inp string, pos int) {
-	Replace(lab.Main, inp+"\n", lab.MainLine+pos)
+	Replace(lab.Main, inp, lab.MainLine+pos)
 
 }
 
@@ -55,19 +55,21 @@ func Import(lab *Lab, s string) {
 }
 
 func Type(lab *Lab, s string) {
-	trimmed := strings.TrimSpace(strings.Trim(s, "{}type"))
+	trimmed := strings.TrimSpace(strings.Trim(s, "type"))
 
 	parts := syntax.TypeParts(trimmed)
 
-	if parts[1] == "struct" || parts[1] == "interface" {
-		dec := fmt.Sprintf("type %s %s {\n", parts[0], parts[1])
+	typ := strings.TrimSpace(strings.Trim(parts[1], "{"))
+
+	if typ == "struct" || typ == "interface" {
+		dec := fmt.Sprintf("type %s %s {\n", parts[0], typ)
 		InsertString(lab.Main, dec, lab.MainLine-1)
 
 		lab.InBody = true
 		lab.Depth++
 		lab.MainLine++
 	} else {
-		dec := fmt.Sprintf("type %s %s{}\n", parts[0], parts[1])
+		dec := fmt.Sprintf("type %s %s\n", parts[0], typ)
 		InsertString(lab.Main, dec, lab.MainLine-1)
 		lab.MainLine++
 	}

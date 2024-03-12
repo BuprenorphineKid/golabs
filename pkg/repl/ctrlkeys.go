@@ -1,9 +1,11 @@
 package repl
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/BuprenorphineKid/golabs/pkg/cli"
 	"github.com/BuprenorphineKid/golabs/pkg/commandbar"
-	"os"
 )
 
 const (
@@ -13,7 +15,37 @@ const (
 )
 
 func ctrlB() {
+	debug()
+}
 
+func debug() {
+
+	term.Cursor.SavePos()
+
+	term.Cursor.MoveTo(10, 15)
+	fmt.Printf("%s", usr.Input.Lines)
+
+	term.Cursor.MoveTo(10, 16)
+	fmt.Printf("Lines = %d, Y = %d, X = %d",
+		len(usr.Input.Lines),
+		term.Cursor.Y,
+		term.Cursor.X,
+	)
+
+	term.Cursor.MoveTo(10, 17)
+	fmt.Printf("[4:] = %d", len(usr.Input.Lines[4:]))
+
+	// select {
+	// case pos := <-dbgCh:
+	// 	term.Cursor.MoveTo(10, 17)
+	// 	fmt.Printf("Lines[4:]: %d, POS: %d",
+	// 		len(usr.Input.Lines[4:]),
+	// 		pos,
+	// 	)
+	// default:
+	// }
+
+	term.Cursor.RestorePos()
 }
 
 func ctrlC() {
